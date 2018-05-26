@@ -3,6 +3,8 @@
 # teslogger.sh
 #
 # sample energy streams from Telsa Powerwall Gateway and log data to file
+#
+# see also: jshon   - tool for parsing JSON data on the command-line
 
 # settings
 tsamp=5     # sampling interval
@@ -14,10 +16,10 @@ mv aggregates.json aggregates_$Told.json   # save any unfinished data
 
 while true ; do
 
-  # wait for seconds rollover
-  while [ $(( $(date +%S | sed -e 's/^0//') % $tsamp)) -ne 0 ] ; do 
-    sleep 0.01 ;
-  done
+  # wait to the next multiple of tsamp seconds
+  wait=$(date +%S.%N | sed -e 's/^0//' |
+    awk -v tsamp=$tsamp '{ printf("%f", tsamp -0.007 - ($1 % tsamp))}')
+  sleep $wait
   Tnew=$(date +%F,%T.%N)
   dnew=$(echo $Tnew | sed -e 's/,.*//')    # extract new date
   dold=$(echo $Told | sed -e 's/,.*//')    # extract old date
@@ -35,7 +37,6 @@ while true ; do
     ls -l teslog_$dold.*
   fi
 
-  sleep 1     # let actual second pass 
   Told=$Tnew
 done
 
