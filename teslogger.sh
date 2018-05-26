@@ -35,8 +35,8 @@ while true ; do
     ls -l teslog_$dold.*
   fi
 
-  sleep 1     # let actual second pass away
-  told=$tnew
+  sleep 1     # let actual second pass 
+  Told=$Tnew
 done
 
   
