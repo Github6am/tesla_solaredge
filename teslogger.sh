@@ -77,7 +77,7 @@ echo                    | $hc
 echo "# command line:"  | $hc
 echo "$cmdline"         | $hc
 echo                    | $hc
-echo "# settings:"      | $hcc
+echo "# settings:"      | $hc
 for vv in $varlist ; do
   echo "$vv=\"${!vv}\"" | $hc
 done                    
@@ -134,7 +134,7 @@ fi
 if echo "$action" | grep "extract" > /dev/null ; then
   for logf in $logfiles ; do
     cat=cat
-    if file $logf | grep "gzip compressed data" | $hc ; then
+    if file $logf | grep "gzip compressed data" > /dev/null ; then
       cat=zcat
     fi
     if echo "$action" | grep "pretty-print" > /dev/null ; then
