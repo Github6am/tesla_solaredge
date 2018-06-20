@@ -63,7 +63,7 @@ if 1
   ll=legend(keys{ipower});  set(ll,'Interpreter','none');
   set(gca,'ColorOrder', mycolororder );
 
-  print( [ gname 'instant_power.pdf'], '-dpdf', '-portrait');
+  print( [ gname '_instant_power.pdf'], '-dpdf', '-portrait');
 end
 
 %---------------------------------
@@ -71,8 +71,8 @@ end
 %---------------------------------
 if 1
   eecum=ee(:,ienergy);
-  eesum=ee(:,ienergyE)-ee(:,ienergyI);
-  eeday=ee(:,ienergy) - ones(size(ee,1),1)*ee(1,ienergy);
+  eesum=ee(:,ienergyE)-ee(:,ienergyI);   % export-import
+  eeday=ee(:,ienergy) - ones(size(ee,1),1)*ee(1,ienergy);  
 
   figure
   plot(t, eeday/1e3); grid on
@@ -82,7 +82,7 @@ if 1
   ll=legend(keys{ienergy},'location','northwest');  set(ll,'Interpreter','none');
   set(gca,'colororder', mycolororder );
   
-  print( [ gname 'energy.pdf'], '-dpdf', '-portrait');
+  print( [ gname '_energy.pdf'], '-dpdf', '-portrait');
 end
 
 %---------------------------------
@@ -107,8 +107,28 @@ if 0
   ll=legend(keys{ienerg});  set(ll,'Interpreter','none');
   set(gca,'ColorOrder', mycolororder );
 
-  print( [ gname 'stavg_power.pdf'], '-dpdf', '-portrait');
+  print( [ gname '_stavg_power.pdf'], '-dpdf', '-portrait');
 end
+
+%---------------------------------
+% plot frequency
+%---------------------------------
+if 1
+  ifre=ifreq;
+  %ifre=ifreq([ 1 3 4 ]);  % select not all
+  freq=ee(:,ifre);
+
+  figure
+  plot(t, freq); grid on
+  tt=title(sprintf('Frequency %s', gname), 'Interpreter','none' );
+  xlabel('t / h'); ylabel('f / Hz');
+  axis("tight"); ylim(50+[-0.2 0.2]);
+  ll=legend(keys{ifre},'location','northwest');  set(ll,'Interpreter','none');
+  set(gca,'colororder', mycolororder );
+  
+  print( [ gname '_freq.pdf'], '-dpdf', '-portrait');
+end
+
 
 %---------------------
 % result struct
