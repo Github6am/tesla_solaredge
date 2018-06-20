@@ -37,6 +37,8 @@ th=ee(:,4);	% hour
 tm=ee(:,5);	% minute
 ts=ee(:,6);	% seconds
 t=th+tm/60+ts/3600;
+days = datenum (ee(:,1:6));
+%dv=datevec(days);
 
 keys={'year', 'month', 'day', 'hour', 'min', 'sec', 'site_instant_power', 'site_frequency', 'site_energy_exported', 'site_energy_imported', 'battery_instant_power', 'battery_frequency', 'battery_energy_exported', 'battery_energy_imported', 'load_instant_power', 'load_frequency', 'load_energy_exported', 'load_energy_imported', 'solar_instant_power', 'solar_frequency', 'solar_energy_exported', 'solar_energy_imported'};
 ienergy  = find( cellfun(@isempty, regexp (keys, 'energy')) == 0);
@@ -52,9 +54,12 @@ if 1
   ipower=ipower(3:4);  % select only solar and load power
 
   figure
-  plot(t, ee(:,ipower)); grid on
+  plot(t, ee(:,ipower)/1e3); grid on
+  %plot(days, ee(:,ipower)/1e3); grid on
+  %datetick;
+  axis("tight"); ylim([-0.2 8]);
   tt=title(sprintf('Power %s', gname), 'Interpreter','none' );
-  xlabel('t / h'); ylabel('p / W');
+  xlabel('t / h'); ylabel('p / kW');
   ll=legend(keys{ipower});  set(ll,'Interpreter','none');
   set(gca,'ColorOrder', mycolororder );
 
@@ -73,6 +78,7 @@ if 1
   plot(t, eeday/1e3); grid on
   tt=title(sprintf('Energy %s', gname), 'Interpreter','none' );
   xlabel('t / h'); ylabel('E / kWh');
+  axis("tight"); ylim([-2 45]);
   ll=legend(keys{ienergy},'location','northwest');  set(ll,'Interpreter','none');
   set(gca,'colororder', mycolororder );
   
