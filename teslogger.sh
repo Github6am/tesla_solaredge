@@ -9,6 +9,7 @@
 #
 #   # record energy data
 #   teslogger.sh
+#   teslogger.sh tsamp=2
 #
 #   # export and understand the structure of the data
 #   teslogger.sh -e outformat="" pattern="" teslog_2018*.json.gz | head -n 200 
@@ -20,19 +21,20 @@
 #   teslogger.sh -e pattern='"date_time\|instant_power"' teslog_2018*.json.gz > p.dat
 #
 #   # gnu octave graph
-#   load 'p.dat' ; figure, plot(p(:,7:10)
+#   load 'p.dat' ; figure, plot(p(:,7:10));
+#   tlpower('aggregates_2018-06-17.json.gz');
 #
 # Background:
 #   - connect with browser to Tesla Powerwall 2 and watch IP traffic
 #     to learn how it works
 #   - see also: jshon   - tool for parsing JSON data on the command-line
 
-# $Header: teslogger.sh, v1.2, Andreas Merz, 2018, GPL $
+# $Header: teslogger.sh, v1.3, Andreas Merz, 2018, GPL $
 
 hc=cat                     # header filter: none               
 
 #--- default settings ---
-tsamp=5     # sampling interval in seconds, 0 < tstamp < 60
+tsamp=5     # sampling interval in seconds, 0.1 < tsamp < 60
 url1=http://192.168.2.9/api/meters/aggregates   # Tesla adress of Metering info
 url2=http://192.168.2.9/api/system_status/soe   # Battery level in percent
 logfile=aggregates
@@ -64,7 +66,7 @@ while [ "$1" != "" ] ; do
   case "$cnt" in 
    0)  ;; 
    1)  logfile="$par" ; logfiles="$logfile" ;;
-   *)  logfiles="$logfiles $par" ;;
+   *)  logfiles="$logfiles $par" ;;             # append all further arguments
   esac 
 done
 
@@ -192,13 +194,18 @@ if echo "$action" | grep "extract" > /dev/null ; then
 		            if(newline) {
 			      newline=0
 			      gsub("\"","",$2);
-			      if(cnt++ == 1) print title ;
-			      print data ;
+			      if(cnt++ == 1) { 
+			        print title ; 
+				Nk=keycnt;          # remember number of keys
+			      }
+			      if( Nk==keycnt) print data ;  # output data, if no item is missing
 			      title="#"
 			      data=""
+			      keycnt=0;
 			    }
-			    title=sprintf("%s %s", title, $1);
-			    data =sprintf("%s %s",  data, $2);
+			    title=sprintf("%s %s", title, $1);   # collect left hand sides (keys)
+			    data =sprintf("%s %s",  data, $2);   # collect right hand sides (values)
+			    if($1) keycnt++;
 		         }
 		       }         
 	               '
