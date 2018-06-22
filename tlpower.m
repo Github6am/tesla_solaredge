@@ -113,13 +113,25 @@ end
 %---------------------------------
 % plot frequency
 %---------------------------------
-if 1
+if 0
   ifre=ifreq;
   %ifre=ifreq([ 1 3 4 ]);  % select not all
   freq=ee(:,ifre);
 
+  if 0
+    # average/filter the poorly quantized freq data
+    Nfilt=31;
+    %h=ones(Nfilt,1);  % Rechteckfenster
+    h=hann(Nfilt);     % raised-cosine window
+    h=h/sum(h);        % DC amplitude normalize
+    [freqf,sf]=filter(h,1,fliplr(freq(1:Nfilt)));
+    [freqf,sf]=filter(h,1,freq, sf);
+  else
+    freqf=freq;
+  end
+  
   figure
-  plot(t, freq); grid on
+  plot(t, freqf); grid on
   tt=title(sprintf('Frequency %s', gname), 'Interpreter','none' );
   xlabel('t / h'); ylabel('f / Hz');
   axis("tight"); ylim(50+[-0.2 0.2]);
