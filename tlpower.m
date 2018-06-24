@@ -8,9 +8,14 @@ function tldat=tlpower(fname)
 tlpath='/home/amerz/office/projects/solar/tesla_solaredge/log'
 tlpath='.'
 
+if ~exist('fname')
+  fname='';
+end
 if isempty(fname)
-  fname='teslog.json'
-  fname='aggregates.json'
+  fname='teslog.json';
+  fname='aggregates.json';
+  cmd=sprintf('scp -p 192.168.2.14:/home/amerz/office/projects/solar/tesla_solaredge/log/aggregates.json %s', fname)
+  [status,output]=system( cmd )
 end
 
 mycolororder = [0.4 0.3 0.0; 0.9 0.0 0.0; 0.9 0.4 0.0; 0.8 0.8 0.0; 0.1 0.8 0.0; 0.0 0.1 0.9; 0.5 0.0 0.6; 0.4 0.4 0.4; 0.5 0.8 0.8 ; 0 0 0 ];
