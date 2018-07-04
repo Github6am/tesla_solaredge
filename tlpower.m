@@ -3,7 +3,10 @@ function tldat=tlpower(fname)
 % with gnu octave
 %
 % Usage Examples:
-%   tlpower('aggregates_2018-05-30.json.gz');
+%   tlpower('aggregates_2018-05-29.json.gz');
+%
+%   dd=dir('aggregates_2018*.json.gz');
+%   for i=1:length(dd), tlpower(dd(i).name); close all ; end
 
 tlpath='/home/amerz/office/projects/solar/tesla_solaredge/log'
 tlpath='.'
@@ -83,7 +86,7 @@ if 1
   plot(t, eeday/1e3); grid on
   tt=title(sprintf('Energy %s', gname), 'Interpreter','none' );
   xlabel('t / h'); ylabel('E / kWh');
-  axis("tight"); ylim([-2 45]);
+  axis("tight"); ylim([-2 50]);
   ll=legend(keys{ienergy},'location','northwest');  set(ll,'Interpreter','none');
   set(gca,'colororder', mycolororder );
   
