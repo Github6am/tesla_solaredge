@@ -59,13 +59,13 @@ ifreq    = find( cellfun(@isempty, regexp (keys, 'frequency')) == 0);
 % plot instant power
 %---------------------
 if 1
-  ipower=ipower(3:4);  % select only solar and load power
+  ipower=ipower(1:4);  % select only solar and load power
 
   figure
   plot(t, ee(:,ipower)/1e3); grid on
   %plot(days, ee(:,ipower)/1e3); grid on
   %datetick;
-  axis("tight"); ylim([-0.2 8]);
+  axis("tight"); ylim([-8 8]);
   tt=title(sprintf('Power %s', gname), 'Interpreter','none' );
   xlabel('t / h'); ylabel('p / kW');
   ll=legend(keys{ipower});  set(ll,'Interpreter','none');
@@ -139,7 +139,7 @@ if 0
   end
   
   figure
-  plot(t, freqf); grid on
+  plot(t, freqf); grid onpower
   tt=title(sprintf('Frequency %s', gname), 'Interpreter','none' );
   xlabel('t / h'); ylabel('f / Hz');
   axis("tight"); ylim(50+[-0.2 0.2]);

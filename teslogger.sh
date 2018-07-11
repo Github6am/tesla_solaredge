@@ -31,12 +31,13 @@
 
 # $Header: teslogger.sh, v1.3, Andreas Merz, 2018, GPL $
 
-hc=cat                     # header filter: none               
+hc=cat                        # header filter: none               
+ip=1099752-01-B--T17J0003327  # my Tesla hostname
 
 #--- default settings ---
 tsamp=5     # sampling interval in seconds, 0.1 < tsamp < 60
-url1=http://192.168.2.9/api/meters/aggregates   # Tesla adress of Metering info
-url2=http://192.168.2.9/api/system_status/soe   # Battery level in percent
+url1=http://$ip/api/meters/aggregates   # Tesla adress of Metering info
+url2=http://$ip/api/system_status/soe   # Battery level in percent
 logfile=aggregates
 action=log,stamp           # default action: start logging, add PC timestamp
 outformat="dat"            # output file format [dat | csv | "" ]
