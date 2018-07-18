@@ -7,6 +7,13 @@ function tldat=tlpower(fname)
 %
 %   dd=dir('aggregates_2018*.json.gz');
 %   for i=1:length(dd), tlpower(dd(i).name); close all ; end
+%
+%   tlpower();   % fetch and display ongoing log
+%
+% Background:
+%   - some stuff is still hardcoded yet
+% 
+% Author: A. Merz, 2018, GPL
 
 tlpath='/home/amerz/office/projects/solar/tesla_solaredge/log'
 tlpath='.'
@@ -17,7 +24,8 @@ end
 if isempty(fname)
   fname='teslog.json';
   fname='aggregates.json';
-  cmd=sprintf('scp -p 192.168.2.9:/home/amerz/office/projects/solar/tesla_solaredge/log/aggregates.json %s', fname)
+  dname=regexprep(fname,'\.json','\.dat');  % remove this to trigger rebuild
+  cmd=sprintf('scp -p 192.168.2.9:/home/amerz/office/projects/solar/tesla_solaredge/log/aggregates.json %s ; rm %s', fname, dname)
   [status,output]=system( cmd )
 end
 
