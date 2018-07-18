@@ -17,7 +17,7 @@ end
 if isempty(fname)
   fname='teslog.json';
   fname='aggregates.json';
-  cmd=sprintf('scp -p 192.168.2.14:/home/amerz/office/projects/solar/tesla_solaredge/log/aggregates.json %s', fname)
+  cmd=sprintf('scp -p 192.168.2.9:/home/amerz/office/projects/solar/tesla_solaredge/log/aggregates.json %s', fname)
   [status,output]=system( cmd )
 end
 
@@ -59,7 +59,7 @@ ifreq    = find( cellfun(@isempty, regexp (keys, 'frequency')) == 0);
 % plot instant power
 %---------------------
 if 1
-  ipower=ipower(1:4);  % select only solar and load power
+  ipower=ipower(1:4);  % 3:4 select only solar and load power
 
   figure
   plot(t, ee(:,ipower)/1e3); grid on
