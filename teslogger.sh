@@ -32,7 +32,7 @@
 # $Header: teslogger.sh, v1.3, Andreas Merz, 2018, GPL $
 
 hc=cat                        # header filter: none               
-ip=1099752-01-B--T17J0003327  # my Tesla hostname
+ip=192.168.2.7    # 1099752-01-B--T17J0003327  # my Tesla hostname
 
 #--- default settings ---
 tsamp=5     # sampling interval in seconds, 0.1 < tsamp < 60
@@ -109,7 +109,7 @@ if echo "$action" | grep "log" > /dev/null ; then
       echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
     fi
     #curl $url1 >> $logfile.json
-    $t wget -O - $url1   >> $logfile.json
+    $t wget --no-check-certificate -O - $url1   >> $logfile.json
     echo              >> $logfile.json
 
     # when a new day starts, save and compress data
