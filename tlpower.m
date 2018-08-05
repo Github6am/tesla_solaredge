@@ -17,6 +17,7 @@ function tldat=tlpower(fname)
 
 tlpath='/home/amerz/office/projects/solar/tesla_solaredge/log'
 tlpath='.'
+logsrv='192.168.2.9:/home/amerz/office/projects/solar/tesla_solaredge/log';
 
 if ~exist('fname')
   fname='';
@@ -25,8 +26,14 @@ if isempty(fname)
   fname='teslog.json';
   fname='aggregates.json';
   dname=regexprep(fname,'\.json','\.dat');  % remove this to trigger rebuild
-  cmd=sprintf('scp -p 192.168.2.9:/home/amerz/office/projects/solar/tesla_solaredge/log/aggregates.json %s ; rm %s', fname, dname)
+  cmd=sprintf('scp -p %s/aggregates.json %s ; rm %s', logsrv, fname, dname)
   [status,output]=system( cmd )
+else
+  if ~exist(fname,'file')
+    % try to fetch it from the logger server
+    cmd=sprintf('scp -p %s/%s .', logsrv, fname)
+    [status,output]=system( cmd )
+  end
 end
 
 mycolororder = [0.4 0.3 0.0; 0.9 0.0 0.0; 0.9 0.4 0.0; 0.8 0.8 0.0; 0.1 0.8 0.0; 0.0 0.1 0.9; 0.5 0.0 0.6; 0.4 0.4 0.4; 0.5 0.8 0.8 ; 0 0 0 ];
