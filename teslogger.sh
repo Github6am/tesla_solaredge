@@ -13,6 +13,8 @@
 #
 #   teslogger.sh wgetopts="'-d'"   # debug output, see wget -h, man wget
 #
+#   nohup teslogger.sh tsamp=2 &   # run as a daemon
+#
 #   # export and understand the structure of the data
 #   teslogger.sh -e outformat="" pattern="" teslog_2018*.json.gz | head -n 200 
 #
