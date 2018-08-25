@@ -11,6 +11,8 @@
 #   teslogger.sh
 #   teslogger.sh tsamp=2
 #
+#   teslogger.sh wgetopts="'-d'"   # debug output, see wget -h, man wget
+#
 #   # export and understand the structure of the data
 #   teslogger.sh -e outformat="" pattern="" teslog_2018*.json.gz | head -n 200 
 #
@@ -28,6 +30,7 @@
 #   - connect with browser to Tesla Powerwall 2 and watch IP traffic
 #     to learn how it works
 #   - see also: jshon   - tool for parsing JSON data on the command-line
+#   - GnuTLS problem with wget 1.13.4 on Raspbian. Worked with wget 1.16
 
 # $Header: teslogger.sh, v1.3, Andreas Merz, 2018, GPL $
 
@@ -43,6 +46,7 @@ action=log,stamp           # default action: start logging, add PC timestamp
 outformat="dat"            # output file format [dat | csv | "" ]
 pattern="date_time\|energy_"
 reject="busway_\|frequency_\|generator_"
+wgetopts="--no-check-certificate"
 
 #--- process arguments ---
 cmdline="$0 $@"
@@ -109,7 +113,7 @@ if echo "$action" | grep "log" > /dev/null ; then
       echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
     fi
     #curl $url1 >> $logfile.json
-    $t wget --no-check-certificate -O - $url1   >> $logfile.json
+    $t wget $wgetopts -O - $url1   >> $logfile.json
     echo              >> $logfile.json
 
     # when a new day starts, save and compress data
