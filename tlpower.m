@@ -64,12 +64,13 @@ t=th+tm/60+ts/3600;
 days = datenum (ee(:,1:6));
 %dv=datevec(days);
 
-keys={'year', 'month', 'day', 'hour', 'min', 'sec', 'site_instant_power', 'site_frequency', 'site_energy_exported', 'site_energy_imported', 'battery_instant_power', 'battery_frequency', 'battery_energy_exported', 'battery_energy_imported', 'load_instant_power', 'load_frequency', 'load_energy_exported', 'load_energy_imported', 'solar_instant_power', 'solar_frequency', 'solar_energy_exported', 'solar_energy_imported'};
+keys={'year', 'month', 'day', 'hour', 'min', 'sec', 'site_instant_power', 'site_frequency', 'site_energy_exported', 'site_energy_imported', 'battery_instant_power', 'battery_frequency', 'battery_energy_exported', 'battery_energy_imported', 'load_instant_power', 'load_frequency', 'load_energy_exported', 'load_energy_imported', 'solar_instant_power', 'solar_frequency', 'solar_energy_exported', 'solar_energy_imported', 'global_percentage'};
 ienergy  = find( cellfun(@isempty, regexp (keys, 'energy')) == 0);
 ienergyE = find( cellfun(@isempty, regexp (keys, 'energy.*export')) == 0);
 ienergyI = find( cellfun(@isempty, regexp (keys, 'energy.*import')) == 0);
 ipower   = find( cellfun(@isempty, regexp (keys, 'power' )) == 0);
 ifreq    = find( cellfun(@isempty, regexp (keys, 'frequency')) == 0);
+ibattpc  = find( cellfun(@isempty, regexp (keys, 'percentage')) == 0);
 
 %---------------------
 % plot instant power
@@ -168,19 +169,13 @@ end
 %---------------------------------
 % plot battery charging level
 %---------------------------------
-if 1
-  bp=load(bname);         % battery charging level percentage data
-  ibp=7;
-  
-  % use time data not from t to be sure, sizes match
-  bt=bp(:,4)+bp(:,5)/60+bp(:,6)/3600;
-  bdays = datenum (bp(:,1:6));
-  battperc=bp(:,ibp);
-  capacity_kWh=13;          % Tesla powerwall 2 capacity
-  battkWh=bp(:,ibp)*capacity_kWh;
+if 1 & ~isempty(ibattpc)
+  battperc = ee(:,ibattpc);        % quantization step 0.0074189/100*13.5e3 = 1Wh
+  capacity_kWh = 13;               % Tesla powerwall 2 capacity
+  battkWh = battperc*capacity_kWh;
 
   figure
-  plot(bt, battperc); grid on
+  plot(t, battperc); grid on
   tt=title(sprintf('battery charging state'), 'Interpreter','none' );
   xlabel('t / h'); ylabel('c / percent');
   axis("tight"); 
