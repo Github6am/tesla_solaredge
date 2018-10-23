@@ -42,6 +42,7 @@ set(0, 'defaultLineLineWidth', 1.5);
 
 gname=regexprep(fname,'\.json.*','');    % generic name
 dname=[gname '.dat'];
+bname=[gname '.percentage.dat'];       % name of battery charging level percentage data
 
 if ~exist(dname,'file')
   % call converter shell script to generate .dat file
@@ -154,7 +155,7 @@ if 0
   end
   
   figure
-  plot(t, freqf); grid onpower
+  plot(t, freqf); grid on
   tt=title(sprintf('Frequency %s', gname), 'Interpreter','none' );
   xlabel('t / h'); ylabel('f / Hz');
   axis("tight"); ylim(50+[-0.2 0.2]);
@@ -162,6 +163,31 @@ if 0
   set(gca,'colororder', mycolororder );
   
   print( [ gname '_freq.pdf'], '-dpdf', '-portrait');
+end
+
+%---------------------------------
+% plot battery charging level
+%---------------------------------
+if 1
+  bp=load(bname);         % battery charging level percentage data
+  ibp=7;
+  
+  % use time data not from t to be sure, sizes match
+  bt=bp(:,4)+bp(:,5)/60+bp(:,6)/3600;
+  bdays = datenum (bp(:,1:6));
+  battperc=bp(:,ibp);
+  capacity_kWh=13;          % Tesla powerwall 2 capacity
+  battkWh=bp(:,ibp)*capacity_kWh;
+
+  figure
+  plot(bt, battperc); grid on
+  tt=title(sprintf('battery charging state'), 'Interpreter','none' );
+  xlabel('t / h'); ylabel('c / percent');
+  axis("tight"); 
+  %ylim([0 100]);
+  set(gca,'colororder', mycolororder );
+  
+  print( [ gname '_batt.pdf'], '-dpdf', '-portrait');
 end
 
 

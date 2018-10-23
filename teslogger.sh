@@ -109,6 +109,8 @@ if echo "$action" | grep "log" > /dev/null ; then
     Tnew=$(date +%F,%T.%N)
     dnew=$(echo $Tnew | sed -e 's/,.*//')    # extract new date
     dold=$(echo $Told | sed -e 's/,.*//')    # extract old date
+    Mnew=$(echo $Tnew | sed -e 's/.*:\(..\):.*/\1/')    # extract new minute
+    Mold=$(echo $Told | sed -e 's/.*:\(..\):.*/\1/')    # extract old minute
 
     # fetch new energy state
     if echo $action | grep "stamp" > /dev/null ; then
@@ -117,6 +119,16 @@ if echo "$action" | grep "log" > /dev/null ; then
     #curl $url1 >> $logfile.json
     $t wget $wgetopts -O - $url1   >> $logfile.json
     echo              >> $logfile.json
+
+    # fetch new battery state every minute
+    #if [ "$Mold" != "$Mnew" ] ; then
+      if echo $action | grep "stamp" > /dev/null ; then
+	echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
+      fi
+      #curl $url1 >> $logfile.json
+      $t wget $wgetopts -O - $url2   >> $logfile.json
+      echo              >> $logfile.json
+    #fi
 
     # when a new day starts, save and compress data
     if [ "$dold" != "$dnew" ] ; then
@@ -160,14 +172,16 @@ if echo "$action" | grep "extract" > /dev/null ; then
     else
       # simple json parser
       $t $cat $logf | tr ',' '\n' |  
-	 sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' |
+	 sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' | tee tmp1 |
 	 awk '          
 	                   { if(0) print $0; }   # debug
            /\{/            { ident++; }
            /\}/            { ident--; }
 	   /^[0-9]{4}-[0-9]{2}-[0-9]{2}/ { 
 	                     pcdate=$1;
-	                     gsub("-"," ", pcdate); 
+	                     gsub("-"," ", pcdate);
+			     if(ident<1) obj="general";
+			     k="";
 			   }
 	   /^[0-9:\.]+: $/ { pctime=$1;
 	                     gsub(":"," ", pctime); 
@@ -181,8 +195,10 @@ if echo "$action" | grep "extract" > /dev/null ; then
 			     val=t[2];
 			     # last_communication_time special treatment:
 			     if(t[5] != "") val=sprintf("%s:%s:%s:%s",t[2],t[3],t[4],t[5]);
-			     if (val == "") 
+			     if (val == "") { 
 			       obj=key ;
+			       k="";
+			     }
 			     else { 
 			       k=sprintf("%s_%s",obj,key);  # create a unique key
 			       gsub("\"","",k);             # remove quotes
@@ -190,18 +206,19 @@ if echo "$action" | grep "extract" > /dev/null ; then
 			     }
 	        	     if(k != "") print k " = " v[k] ;
 			   }
-	   ' | grep -v "$reject" | grep "$pattern" |
+	   ' | tee tmp2 | grep -v "$reject" | grep "$pattern" | uniq  | tee tmp3 |
 	 awk -F "=" -v format=$outformat '
-                       { newline=0; if(0) print $0; }
-	   /date_time/ { newline=1; }
+                       { newline=0; if(0) print $0; 
+		       }
+	   /date_time/ { newline++; 
+		       }
 	               { if( format == "" ) 
 		            print $0;
 		       }         
 	               { if( format == "dat" ) {    # Matlab ascii data
 		            if(newline) {
-			      newline=0
 			      gsub("\"","",$2);
-			      if(cnt++ == 1) { 
+			      if(cnt++ == 1) {      # print title once, then never again
 			        print title ; 
 				Nk=keycnt;          # remember number of keys
 			      }
