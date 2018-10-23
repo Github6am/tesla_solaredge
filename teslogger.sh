@@ -172,7 +172,7 @@ if echo "$action" | grep "extract" > /dev/null ; then
     else
       # simple json parser
       $t $cat $logf | tr ',' '\n' |  
-         sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' | tee tmp1 |
+         sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' |
          awk '          
                            { if(0) print $0; }   # debug
            /\{/            { ident++; }
@@ -206,7 +206,7 @@ if echo "$action" | grep "extract" > /dev/null ; then
                              }
                              if(k != "") print k " = " v[k] ;
                            }
-           ' | tee tmp2 | grep -v "$reject" | grep "$pattern" | uniq  | tee tmp3 |
+           ' | grep -v "$reject" | grep "$pattern" |
          awk -F "=" -v format=$outformat '
                        { newline=0; if(0) print $0; 
                        }
