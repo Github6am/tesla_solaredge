@@ -169,7 +169,7 @@ end
 %---------------------------------
 % plot battery charging level
 %---------------------------------
-if 1 & ~isempty(ibattpc)
+if 1 && size(ee,2) >= ibattpc
   battperc = ee(:,ibattpc);        % quantization step 0.0074189/100*13.5e3 = 1Wh
   capacity_kWh = 13;               % Tesla powerwall 2 capacity
   battkWh = battperc*capacity_kWh;
