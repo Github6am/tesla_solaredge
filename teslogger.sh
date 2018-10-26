@@ -17,12 +17,14 @@
 #
 #   # export and understand the structure of the data
 #   teslogger.sh -e outformat="" pattern="" teslog_2018*.json.gz | head -n 200 
+#   teslogger.sh action=extract,pretty-print linerange=1,2 outformat="" aggregates.json
 #
 #   # export data to matlab/octave array
 #   teslogger.sh -e teslog_2018-05-26.json.gz | head -n 30 > e.dat
 #   teslogger.sh -e teslog_2018*.json.gz | head -n 30 > e.dat
 #   teslogger.sh -e teslog_2018*.json.gz  > e.dat
-#   teslogger.sh -e pattern='"date_time\|instant_power"' teslog_2018*.json.gz > p.dat
+#   teslogger.sh -e pattern='"date_time\|instant_power"' aggregates_2018*.json.gz > p.dat
+#   teslogger.sh -e pattern='"date_time\|instant_power"' linerange=/07:15:00/,/07:16:00/ aggregates_2018-10*.json.gz > p.dat
 #
 #   # gnu octave graph
 #   load 'p.dat' ; figure, plot(p(:,7:10));
@@ -34,7 +36,7 @@
 #   - see also: jshon   - tool for parsing JSON data on the command-line
 #   - GnuTLS problem with wget 1.13.4 on Raspbian. Worked with wget 1.16
 
-# $Header: teslogger.sh, v1.3, Andreas Merz, 2018, GPL $
+# $Header: teslogger.sh, v1.04, Andreas Merz, 2018, GPL $
 
 hc=cat                        # header filter: none               
 ip=192.168.2.7    # 1099752-01-B--T17J0003327  # my Tesla hostname
@@ -49,6 +51,8 @@ outformat="dat"            # output file format [dat | csv | "" ]
 pattern="date_time\|energy_"
 reject="busway_\|frequency_\|generator_"
 wgetopts="--no-check-certificate"
+linerange='1,'             # sed adress, eg 1,100 or /13:15:50/,
+
 
 #--- process arguments ---
 cmdline="$0 $@"
@@ -153,14 +157,21 @@ fi
 # extract data
 #-------------------------------------------------
 if echo "$action" | grep "extract" > /dev/null ; then
+  sedrange="$(echo $linerange | sed 's/,$/,$/') p"
+  echo "#sedrange=$sedrange"
+
   for logf in $logfiles ; do
     cat=cat
     if file $logf | grep "gzip compressed data" > /dev/null ; then
       cat=zcat
     fi
+    
+    # test, if multi-line data set, date tag is considered as start
+    multline=$($cat $logf | sed -n '2,/^2[0-9][0-9][0-9]-/ p' | wc -l) 
+    
     if echo "$action" | grep "pretty-print" > /dev/null ; then
       # simple json formatter
-      $t $cat $logf | tr ',' '\n' |
+      $t $cat $logf | sed -n "$sedrange" | tr ',' '\n' |
          sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' |
          awk '   
            /\}/  { ident--; }
@@ -171,7 +182,7 @@ if echo "$action" | grep "extract" > /dev/null ; then
            '
     else
       # simple json parser
-      $t $cat $logf | tr ',' '\n' |  
+      $t $cat $logf | sed -n "$sedrange" | tr ',' '\n' |  
          sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' |
          awk '          
                            { if(0) print $0; }   # debug
