@@ -35,6 +35,7 @@
 #     to learn how it works
 #   - see also: jshon   - tool for parsing JSON data on the command-line
 #   - GnuTLS problem with wget 1.13.4 on Raspbian. Worked with wget 1.16
+#   - try to work correctly with mawk and gawk
 
 # $Header: teslogger.sh, v1.04, Andreas Merz, 2018, GPL $
 
@@ -188,7 +189,7 @@ if echo "$action" | grep "extract" > /dev/null ; then
                            { if(0) print $0; }   # debug
            /\{/            { ident++; }
            /\}/            { ident--; }
-           /^[0-9]{4}-[0-9]{2}-[0-9]{2}/ { 
+           /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/ { 
                              pcdate=$1;
                              gsub("-"," ", pcdate);
                              k="";
@@ -201,7 +202,7 @@ if echo "$action" | grep "extract" > /dev/null ; then
                            }
            /.[A-z].*:/     { if(0) print $0;
                              if(ident<2) obj="global";
-                             split($1, t, ":", seps);
+                             split($1, t, ":");
                              key=t[1];
                              val=t[2];
                              # last_communication_time special treatment:
