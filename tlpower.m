@@ -12,12 +12,13 @@ function tldat=tlpower(fname)
 %
 % Background:
 %   - some stuff is still hardcoded yet
+%   - need to create symlinks to tlpower.sh in ~/bin or /usr/local/bin
 % 
 % Author: A. Merz, 2018, GPL
 
 tlpath='/home/amerz/office/projects/solar/tesla_solaredge/log'
-tlpath='.'
-logsrv='192.168.2.9:/home/amerz/office/projects/solar/tesla_solaredge/log';
+%tlpath='.'
+logsrv='192.168.2.9';
 
 if ~exist('fname')
   fname='';
@@ -28,21 +29,24 @@ if isempty(fname)
   dname=regexprep(fname,'\.json','\.dat');  % remove this to trigger rebuild
   if 1  
     % old procedure: fetch bulky actual json file
-    cmd=sprintf('scp -p %s/aggregates.json %s ; rm %s', logsrv, fname, dname)
+    cmd=sprintf('scp -p %s:%s/aggregates.json %s ; rm %s', logsrv, tlpath, fname, dname)
     [status,output]=system( cmd )
   else
     % new procedure: differential fetch of dat file
     % TODO: auslagern in shell skript tlpower --delta
     if  exist(dname,'file')
-      % check if file is from today
+      % check if .dat file is from today, if not delete it. 
+      % else request and add only the last missing part.
+      % TODO
     end
     if ~exist(dname,'file')
-      % remote call converter shell script to generate .dat file
+      % remote call converter shell script to generate .dat file on server
+      % unfortunately, this is way slower than copying the json file over the net
       cmd1=sprintf('cd %s ; ', tlpath)
-      cmd2=sprintf('tlpower.sh %s ; ', fname)
+      cmd2=sprintf('%s/tlpower.sh %s ; ', tlpath, fname)
       cmd =sprintf('ssh %s "%s %s"', logsrv, cmd1, cmd2)
       [status,output]=system( cmd );
-      cmd=sprintf('scp -p %s/%s . ; rm %s', logsrv, dname)
+      cmd=sprintf('scp -p %s:%s/%s .', logsrv, tlpath, dname)
       [status,output]=system( cmd );
     end
   end
@@ -50,7 +54,7 @@ if isempty(fname)
 else
   if ~exist(fname,'file')
     % try to fetch it from the logger server
-    cmd=sprintf('scp -p %s/%s .', logsrv, fname)
+    cmd=sprintf('scp -p %s:%s/%s .', logsrv, tlpath, fname)
     [status,output]=system( cmd )
   end
 end
