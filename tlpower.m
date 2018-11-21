@@ -26,8 +26,27 @@ if isempty(fname)
   fname='teslog.json';
   fname='aggregates.json';
   dname=regexprep(fname,'\.json','\.dat');  % remove this to trigger rebuild
-  cmd=sprintf('scp -p %s/aggregates.json %s ; rm %s', logsrv, fname, dname)
-  [status,output]=system( cmd )
+  if 1  
+    % old procedure: fetch bulky actual json file
+    cmd=sprintf('scp -p %s/aggregates.json %s ; rm %s', logsrv, fname, dname)
+    [status,output]=system( cmd )
+  else
+    % new procedure: differential fetch of dat file
+    % TODO: auslagern in shell skript tlpower --delta
+    if  exist(dname,'file')
+      % check if file is from today
+    end
+    if ~exist(dname,'file')
+      % remote call converter shell script to generate .dat file
+      cmd1=sprintf('cd %s ; ', tlpath)
+      cmd2=sprintf('tlpower.sh %s ; ', fname)
+      cmd =sprintf('ssh %s "%s %s"', logsrv, cmd1, cmd2)
+      [status,output]=system( cmd );
+      cmd=sprintf('scp -p %s/%s . ; rm %s', logsrv, dname)
+      [status,output]=system( cmd );
+    end
+  end
+
 else
   if ~exist(fname,'file')
     % try to fetch it from the logger server
@@ -42,7 +61,6 @@ set(0, 'defaultLineLineWidth', 1.5);
 
 gname=regexprep(fname,'\.json.*','');    % generic name
 dname=[gname '.dat'];
-bname=[gname '.percentage.dat'];       % name of battery charging level percentage data
 
 if ~exist(dname,'file')
   % call converter shell script to generate .dat file
@@ -63,6 +81,8 @@ ts=ee(:,6);	% seconds
 t=th+tm/60+ts/3600;
 days = datenum (ee(:,1:6));
 %dv=datevec(days);
+date1=sprintf('%4d-%02d-%02d', tY(1),   tM(1),   tD(1));
+date2=sprintf('%4d-%02d-%02d', tY(end), tM(end), tD(end));
 
 keys={'year', 'month', 'day', 'hour', 'min', 'sec', 'site_instant_power', 'site_frequency', 'site_energy_exported', 'site_energy_imported', 'battery_instant_power', 'battery_frequency', 'battery_energy_exported', 'battery_energy_imported', 'load_instant_power', 'load_frequency', 'load_energy_exported', 'load_energy_imported', 'solar_instant_power', 'solar_frequency', 'solar_energy_exported', 'solar_energy_imported', 'global_percentage'};
 ienergy  = find( cellfun(@isempty, regexp (keys, 'energy')) == 0);
@@ -87,6 +107,8 @@ if 1
   xlabel('t / h'); ylabel('p / kW');
   ll=legend(keys{ipower});  set(ll,'Interpreter','none');
   set(gca,'ColorOrder', mycolororder );
+  tx1=text(0,  -0.08, sprintf('%s', date1), 'Units', 'normalized', 'FontSize', 8);
+  tx2=text(0.9,-0.08, sprintf('%s', date2), 'Units', 'normalized', 'FontSize', 8);
 
   print( [ gname '_instant_power.pdf'], '-dpdf', '-portrait');
 end
@@ -103,9 +125,11 @@ if 1
   plot(t, eeday/1e3); grid on
   tt=title(sprintf('Energy %s', gname), 'Interpreter','none' );
   xlabel('t / h'); ylabel('E / kWh');
-  axis("tight"); ylim([-2 50]);
+  axis("tight"); %ylim([-2 50]);
   ll=legend(keys{ienergy},'location','northwest');  set(ll,'Interpreter','none');
   set(gca,'colororder', mycolororder );
+  tx1=text(0,  -0.08, sprintf('%s', date1), 'Units', 'normalized', 'FontSize', 8);
+  tx2=text(0.9,-0.08, sprintf('%s', date2), 'Units', 'normalized', 'FontSize', 8);
   
   print( [ gname '_energy.pdf'], '-dpdf', '-portrait');
 end
@@ -176,8 +200,10 @@ if 1 && size(ee,2) >= ibattpc
 
   figure
   plot(t, battperc); grid on
-  tt=title(sprintf('battery charging state'), 'Interpreter','none' );
+  tt=title(sprintf('battery charging state, %s', gname), 'Interpreter','none' );
   xlabel('t / h'); ylabel('c / percent');
+  tx1=text(0,  -0.08, sprintf('%s', date1), 'Units', 'normalized', 'FontSize', 8);
+  tx2=text(0.9,-0.08, sprintf('%s', date2), 'Units', 'normalized', 'FontSize', 8);
   axis("tight"); 
   %ylim([0 100]);
   set(gca,'colororder', mycolororder );
