@@ -15,6 +15,8 @@
 #
 #   nohup teslogger.sh tsamp=2 &   # run as a daemon
 #
+#   nohup teslogger.sh tsamp=2 | gzip > nohup.out.gz &   # compress huge output
+#
 #   # export and understand the structure of the data
 #   teslogger.sh -e outformat="" pattern="" teslog_2018*.json.gz | head -n 200 
 #   teslogger.sh action=extract,pretty-print linerange=1,2 outformat="" aggregates.json

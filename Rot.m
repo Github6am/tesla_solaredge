@@ -11,7 +11,7 @@ function R = Rot(axis,phi)
 %   Andreas Merz, 2018, GPL
 
 dim=3;
-if isstr(axis),
+if ischar(axis),
   axis=double(axis - 'x' + 1);
 end
 

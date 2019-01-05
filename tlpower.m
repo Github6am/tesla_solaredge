@@ -18,7 +18,7 @@ function tldat=tlpower(fname)
 
 tlpath='/home/amerz/office/projects/solar/tesla_solaredge/log'
 %tlpath='.'
-logsrv='192.168.2.9';
+logsrv='192.168.2.6';
 
 if ~exist('fname')
   fname='';
