@@ -1,4 +1,4 @@
-function tlsolar(day, month, ndays, myroof)
+function E_kWh = tlsolar(day, month, ndays, myroof)
 %
 % calculate expected solar power for a specific solar panel arrangement
 %
@@ -8,8 +8,9 @@ function tlsolar(day, month, ndays, myroof)
 %   ndays - lenth of plot period in days
 %
 % usage examples:
-%   tlsolar()       % use default settings
-%   tlsolar(21,6)   % power on june 21
+%   tlsolar();       % use default settings
+%   tlsolar(21,6);   % power on june 21
+%   tlsolar(21,3);   % power on march 21
 %
 %   roof.tilt_deg=45;         % orientation of solar panels, 0 is horizontal
 %   roof.axis_deg=90;         % rooftop axis. 0 is north
@@ -19,6 +20,8 @@ function tlsolar(day, month, ndays, myroof)
 %
 % Bezugszeit ist der Sonnentag https://de.wikipedia.org/wiki/Sonnentag
 % die Zaehlung beginnt mit dem 1.Januar 
+%   https://de.wikipedia.org/wiki/Fundamentalsystem_(Astronomie)
+%   https://de.wikipedia.org/wiki/Astronomische_Koordinatensysteme
 
 dmonth=[ 31 28 31 30 31 30 31 31 30 31 30 31];
 Dmonth=cumsum(dmonth);
@@ -53,8 +56,14 @@ T_y=1;
 Ty_d=365.25;       % days/year
 Ty_d=365;          % days/year ignore leap year
 
-dT_h=0.25;         % time resolution in hours
+if 0  % Testcode
+  Ty_d=10;          % days/year ignore leap year
+  T1_d=0;
+  T2_d=Ty_d;
+end
 
+dT_h=0.25;         % time resolution in hours
+Tzone_h=2+6;        % time zone and correction offset
 
 trange=T1_d:dT_h/24:T2_d;
 
@@ -99,7 +108,7 @@ mycolororder = [0.4 0.3 0.0; 0.9 0.0 0.0; 0.9 0.4 0.0; 0.8 0.8 0.0; 0.1 0.8 0.0;
 set(0, 'defaultAxesColorOrder', mycolororder);
 set(0, 'defaultLineLineWidth', 1.5);
 
-if 1
+if 0
   n=[oo n1];    % matrix for plotting
   n=[oo n2];    % matrix for plotting
   figure(1);
@@ -112,9 +121,9 @@ end
 p = zeros(length(trange), size(n1,2));   % init result power
 
 for ii =1:length(trange)
-  td = trange(ii);                 % time in days
-  s1 = Rot('z',-2*pi*td/Ty_d)*ex;   % vector of solar radiation rotating in ecliptic
-  s2 = Rot('y', 23/deg)*s1;        % tilt ecliptic
+  td = trange(ii);                 % time in days, siderischer Tag https://de.wikipedia.org/wiki/Siderischer_Tag
+  s1 = Rot('z',-2*pi*td/Ty_d)*ex;  % vector of solar radiation rotating in ecliptic
+  s2 = Rot('y', 23.43/deg)*s1;        % tilt ecliptic
   
   n6 = Rot('z', 2*pi*td)*n5;       % rotation of the earth
   
@@ -138,9 +147,13 @@ if ndays>3
   plot(trange, [ p sum(p(:,2:end),2)]); grid on;
   xlabel('t / day'); 
 else
-  plot(mod(trange,1)*24, [ p sum(p(:,2:end),2)]); grid on;
+  % Umrechnung auf Sonnentag
+  plot(mod(trange*(1+1/Ty_d) + Tzone_h/24,1)*24, [ p sum(p(:,2:end),2)]); grid on;
   xlabel('t / h'); 
+  %plot(trange*(1+1/Ty_d) - Tzone_h/24, [ p sum(p(:,2:end),2)]); grid on;
+  %xlabel('t / d'); 
 end
 ylabel('p / kW');
-title(sprintf('expected solar power on %d-%d', T1_cm, T1_cd)); 
+title(sprintf('expected solar power starting %d-%d', T1_cm, T1_cd)); 
 
+E_kWh=sum(sum(p(:,2:end),2))*dT_h * 0.7   % 0.7: empirischer Korrekturfaktor, FIXME
