@@ -3,7 +3,8 @@
 
 import matplotlib.pyplot as plt
 import datetime
-import numpy as N
+import numpy as np
+#from numpy import *
 from pysolar.solar import *
 
 date = datetime.datetime.now()
@@ -45,4 +46,20 @@ plt.title(f'Solar Irradiation {day[0]}-{day[1]}-{day[2]}')
 plt.xlabel('t / h')
 plt.ylabel('power density / W/m^2')
 
+#plt.show()
+
+data=np.array([np.array(t), np.array(az), np.array(el), np.array(pp)])
+data.shape
+from numpy import sin,cos,pi
+a=np.array(az)*pi/180
+e=np.array(el)*pi/180
+# Normalenvektor der Einfallsrichtung from numpy import *
+en = np.array([cos(a)*cos(e), sin(a)*cos(e), sin(e) ])
+
+from mpl_toolkits import mplot3d
+plt.figure()
+ax = plt.axes(projection='3d')
+ax.plot3D(en[0,:],en[1,:],en[2,:])
 plt.show()
+
+
