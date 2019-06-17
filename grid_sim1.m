@@ -1,3 +1,6 @@
+% https://de.wikipedia.org/wiki/Netzfrequenz
+% https://de.wikipedia.org/wiki/Regelleistung_(Stromnetz)
+
 
 close all
 clear all
@@ -90,7 +93,7 @@ g.main.I = [];    % site currents flowing into mains
   aa= 1;
   bb= -1/N;
   g.G1_S=1;            % Default conductance in Siemens to central node
-  g.Y = g.G1_S .* (aa*eye(N) + bb* ones(N,N));  % singular
+  g.Y = g.G1_S .* (aa*eye(N) + bb* ones(N,N));  % singular admittance matrix
   %g.Z = pinv(g.Y);     % Impedance Matrix
 
   % Annahme: Site 1 ist das oeffentliche Netz. Dort werden 230V angenommen.
@@ -113,11 +116,13 @@ g.main.I = [];    % site currents flowing into mains
 %---------------
 %   load_init
 %---------------
-% Hilfsvariablen zur Modellierung der Verbraucher
+% ein load event besteht aus: startzeit, dauer, leistung
+
+% Hilfsvariablen zur Modellierung der Verbraucher, Indizierung
 ixt=1:g.Nt;
 loads = [10, 30, 100, 300, 500, 1000, 1200, 1500, 2000, 3000];          % 10 Sorten von Verbrauchern in Watt
-durations = 100*[3, 6, 10, 30, 120, 300, 600, 1100, 1450, 3600, 7000];  % 10 Sorten von Einschaltdauern in sekunden
-
+durations = 1*[6, 10, 30, 120, 300, 600, 1100, 1450, 3600, 7000, 13000];  % 10 Sorten von Einschaltdauern in sekunden
+%durations = 10000*ones(1,length(loads));
 rand('state', 10);  % init random generator
 
 ixr=mod(floor(abs(4*randn(1,1000))),11)+1; % Modellierung einer Verteilung, die kleine Werte haeufiger als grosse enthaelt
@@ -125,23 +130,27 @@ ixr=mod(floor(abs(4*randn(1,1000))),11)+1; % Modellierung einer Verteilung, die 
 
 % Grundlast: 20W
 g.load.p = 20*ones(g.Nn, g.Nt);
-Nevents=10;
+Nevents=30;
 for ixn=1:g.Nn
-  ixrand=mod(floor(abs(8*randn(2,Nevents))),length(loads))+1;   % random index
-  ixbegin=1+floor(g.Nt*rand(1,Nevents));
+  ixrand=mod(floor(abs(8*randn(2,Nevents))),length(loads))+1;   % random indices for all events
+  ixbegin=1+floor(g.Nt*rand(1,Nevents));	      % random start times for all events
   for ixe=1:Nevents
-    iduration=find(ts < durations(ixrand(2,ixe)))
-    ii = ixbegin(ixe):min(g.Nt, ixbegin(ixe)+iduration);
-    g.load.p(ixn,ii) = loads(ixrand(1,ixe));
+    iduration=find(ts < durations(ixrand(2,ixe)));
+    %length(iduration)
+    ii = ixbegin(ixe):min(g.Nt, ixbegin(ixe)+iduration(end)-1);   % index-intervall
+    g.load.p(ixn,ii) = g.load.p(ixn,ii) + loads(ixrand(1,ixe));
   end
 end
 g.load.p = g.load.p/1000;  % convert to unit kW
 
 figure
-plot(g.td, g.load.p');
+%plot(g.td, g.load.p');
+plot( g.load.p');
 
 
+%---------------------
+%   Simulate Voltages
+%---------------------
 
 % Start Simulation
-
 
