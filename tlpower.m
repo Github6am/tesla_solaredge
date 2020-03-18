@@ -16,9 +16,13 @@ function tldat=tlpower(fname)
 % 
 % Author: A. Merz, 2018, GPL
 
-tlpath='/home/amerz/office/projects/solar/tesla_solaredge/log'
-%tlpath='.'
 logsrv='192.168.2.6';
+user='amerz';
+tlpathsrv='/home/amerz/office/projects/solar/tesla_solaredge/log'
+tlpathloc='/home/amerz/office/projects/solar/tesla_solaredge/log'
+if ~exist(tlpathloc,'dir')
+  tlpathloc='.'
+end
 
 if ~exist('fname')
   fname='';
@@ -29,7 +33,7 @@ if isempty(fname)
   dname=regexprep(fname,'\.json','\.dat');  % remove this to trigger rebuild
   if 1  
     % old procedure: fetch bulky actual json file
-    cmd=sprintf('scp -p %s:%s/aggregates.json %s ; rm %s', logsrv, tlpath, fname, dname)
+    cmd=sprintf('scp -p %s@%s:%s/aggregates.json %s ; rm %s', user, logsrv, tlpathsrv, fname, dname)
     [status,output]=system( cmd )
   else
     % new procedure: differential fetch of dat file
@@ -42,11 +46,11 @@ if isempty(fname)
     if ~exist(dname,'file')
       % remote call converter shell script to generate .dat file on server
       % unfortunately, this is way slower than copying the json file over the net
-      cmd1=sprintf('cd %s ; ', tlpath)
-      cmd2=sprintf('%s/tlpower.sh %s ; ', tlpath, fname)
-      cmd =sprintf('ssh %s "%s %s"', logsrv, cmd1, cmd2)
+      cmd1=sprintf('cd %s ; ', tlpathsrv)
+      cmd2=sprintf('%s/tlpower.sh %s ; ', tlpathsrv, fname)
+      cmd =sprintf('ssh %s@%s "%s %s"', user, logsrv, cmd1, cmd2)
       [status,output]=system( cmd );
-      cmd=sprintf('scp -p %s:%s/%s .', logsrv, tlpath, dname)
+      cmd=sprintf('scp -p %s@%s:%s/%s .', user, logsrv, tlpathsrv, dname)
       [status,output]=system( cmd );
     end
   end
@@ -54,7 +58,7 @@ if isempty(fname)
 else
   if ~exist(fname,'file')
     % try to fetch it from the logger server
-    cmd=sprintf('scp -p %s:%s/%s .', logsrv, tlpath, fname)
+    cmd=sprintf('scp -p %s@%s:%s/%s .', user, logsrv, tlpathsrv, fname)
     [status,output]=system( cmd )
   end
 end
@@ -68,8 +72,14 @@ dname=[gname '.dat'];
 
 if ~exist(dname,'file')
   % call converter shell script to generate .dat file
-  cmd=sprintf('%s/tlpower.sh %s', tlpath, fname)
+  cmd=sprintf('%s/tlpower.sh %s', tlpathloc, fname)
   [status,output]=system( cmd );
+  
+  % Matlab does not like the "#"
+  if ~exist('OCTAVE_VERSION','var')
+    cmd=sprintf('mv %s %s.hash ; cat %s.hash | tr ''#'' ''%%'' > %s', dname, dname, dname, dname)
+    [status,output]=system( cmd );
+  end
 end
 
 % load solar collector log data
@@ -99,6 +109,11 @@ ibattpc  = find( cellfun(@isempty, regexp (keys, 'percentage')) == 0);
 %---------------------
 % plot instant power
 %---------------------
+portrait='';       % Matlab does not know this print option
+if exist('OCTAVE_VERSION','var')
+  portrait='-portrait';
+end
+
 if 1
   ipower=ipower(1:4);  % 3:4 select only solar and load power
 
@@ -114,7 +129,7 @@ if 1
   tx1=text(0,  -0.08, sprintf('%s', date1), 'Units', 'normalized', 'FontSize', 8);
   tx2=text(0.9,-0.08, sprintf('%s', date2), 'Units', 'normalized', 'FontSize', 8);
 
-  print( [ gname '_instant_power.pdf'], '-dpdf', '-portrait');
+  print( [ gname '_instant_power.pdf'], '-dpdf', portrait);
 end
 
 %---------------------------------
@@ -135,7 +150,7 @@ if 1
   tx1=text(0,  -0.08, sprintf('%s', date1), 'Units', 'normalized', 'FontSize', 8);
   tx2=text(0.9,-0.08, sprintf('%s', date2), 'Units', 'normalized', 'FontSize', 8);
   
-  print( [ gname '_energy.pdf'], '-dpdf', '-portrait');
+  print( [ gname '_energy.pdf'], '-dpdf', portrait);
 end
 
 %---------------------------------
@@ -160,7 +175,7 @@ if 0
   ll=legend(keys{ienerg});  set(ll,'Interpreter','none');
   set(gca,'ColorOrder', mycolororder );
 
-  print( [ gname '_stavg_power.pdf'], '-dpdf', '-portrait');
+  print( [ gname '_stavg_power.pdf'], '-dpdf', portrait);
 end
 
 %---------------------------------
@@ -172,7 +187,7 @@ if 0
   freq=ee(:,ifre);
 
   if 0
-    # average/filter the poorly quantized freq data
+    % average/filter the poorly quantized freq data
     Nfilt=31;
     %h=ones(Nfilt,1);  % Rechteckfenster
     h=hann(Nfilt);     % raised-cosine window
@@ -191,7 +206,7 @@ if 0
   ll=legend(keys{ifre},'location','northwest');  set(ll,'Interpreter','none');
   set(gca,'colororder', mycolororder );
   
-  print( [ gname '_freq.pdf'], '-dpdf', '-portrait');
+  print( [ gname '_freq.pdf'], '-dpdf', portrait);
 end
 
 %---------------------------------
@@ -212,7 +227,7 @@ if 1 && size(ee,2) >= ibattpc
   %ylim([0 100]);
   set(gca,'colororder', mycolororder );
   
-  print( [ gname '_batt.pdf'], '-dpdf', '-portrait');
+  print( [ gname '_batt.pdf'], '-dpdf', portrait);
 end
 
 
