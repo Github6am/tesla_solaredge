@@ -76,7 +76,7 @@ if ~exist(dname,'file')
   [status,output]=system( cmd );
   
   % Matlab does not like the "#"
-  if ~exist('OCTAVE_VERSION','var')
+  if ~exist('OCTAVE_VERSION','builtin')
     cmd=sprintf('mv %s %s.hash ; cat %s.hash | tr ''#'' ''%%'' > %s', dname, dname, dname, dname)
     [status,output]=system( cmd );
   end
@@ -110,7 +110,7 @@ ibattpc  = find( cellfun(@isempty, regexp (keys, 'percentage')) == 0);
 % plot instant power
 %---------------------
 portrait='';       % Matlab does not know this print option
-if exist('OCTAVE_VERSION','var')
+if exist('OCTAVE_VERSION','builtin')
   portrait='-portrait';
 end
 
