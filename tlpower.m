@@ -13,6 +13,8 @@ function tldat=tlpower(fname)
 % Background:
 %   - some stuff is still hardcoded yet
 %   - need to create symlinks to tlpower.sh in ~/bin or /usr/local/bin
+%   - ssh-copy-id rapk   # server access without password dialogue
+%   - raw .gz data will now be collected in ./data0 subdirectory. 
 % 
 % Author: A. Merz, 2018, GPL
 
@@ -23,10 +25,37 @@ tlpathloc='/home/amerz/office/projects/solar/tesla_solaredge/log'
 if ~exist(tlpathloc,'dir')
   tlpathloc='.'
 end
+tlpath0=[tlpathloc '/data0'];   % raw data goes here
+tlpath1=[tlpathloc '/data1'];   % dat data goes here
+tlpath9=[tlpathloc '/data9'];   % result plots go here
 
-if ~exist('fname')
+if ~exist('fname','var')
   fname='';
 end
+fname0='';
+
+if ~exist(tlpath0,'dir')
+  [status,msg,msgid]=mkdir(tlpath0);
+  if status ~= 1
+    error(msg);
+    return;
+  end
+end
+if ~exist(tlpath1,'dir')
+  [status,msg,msgid]=mkdir(tlpath1);
+  if status ~= 1
+    error(msg);
+    return;
+  end
+end
+if ~exist(tlpath9,'dir')
+  [status,msg,msgid]=mkdir(tlpath9);
+  if status ~= 1
+    error(msg);
+    return;
+  end
+end
+
 if isempty(fname)
   fname='teslog.json';
   fname='aggregates.json';
@@ -56,10 +85,16 @@ if isempty(fname)
   end
 
 else
-  if ~exist(fname,'file')
-    % try to fetch it from the logger server
-    cmd=sprintf('scp -p %s@%s:%s/%s .', user, logsrv, tlpathsrv, fname)
-    [status,output]=system( cmd )
+  % retrieve older raw data from local directory or from server
+  fname0=[tlpath0 '/' fname];
+  if ~exist(fname0,'file')
+    if ~exist(fname,'file') 
+      % try to fetch it from the logger server
+      cmd=sprintf('scp -p %s@%s:%s/%s .', user, logsrv, tlpathsrv, fname)
+      [status,output]=system( cmd )
+    end
+  else
+    [status,msg,msgid] = movefile (fname0, '.')
   end
 end
 
@@ -69,18 +104,26 @@ set(0, 'defaultLineLineWidth', 1.5);
 
 gname=regexprep(fname,'\.json.*','');    % generic name
 dname=[gname '.dat'];
+dname1=[tlpath1 '/' dname];
 
-if ~exist(dname,'file')
-  % call converter shell script to generate .dat file
-  cmd=sprintf('%s/tlpower.sh %s', tlpathloc, fname)
-  [status,output]=system( cmd );
-  
-  % Matlab does not like the "#"
-  if ~exist('OCTAVE_VERSION','builtin')
-    cmd=sprintf('mv %s %s.hash ; cat %s.hash | tr ''#'' ''%%'' > %s', dname, dname, dname, dname)
+% retrieve previously processed data from local directory or re-process it
+if ~exist(dname1,'file')
+  if ~exist(dname,'file')
+    % call converter shell script to generate .dat file
+    cmd=sprintf('%s/tlpower.sh %s', tlpathloc, fname)
     [status,output]=system( cmd );
+
+    % Matlab does not like the "#"
+    if ~exist('OCTAVE_VERSION','builtin')
+      cmd=sprintf('mv %s %s.hash ; cat %s.hash | tr ''#'' ''%%'' > %s', dname, dname, dname, dname)
+      [status,output]=system( cmd );
+    end
   end
+else
+  [status,msg,msgid] = movefile (dname1, '.');
 end
+
+
 
 % load solar collector log data
 ee=load(dname);
@@ -238,6 +281,13 @@ tldat.name=fname;
 tldat.keys=keys;
 tldat.data=ee;
 
+
+movefile('agg*.gz', tlpath0);
+movefile('agg*.dat',tlpath1);
+movefile('agg*.pdf',tlpath9);
+
+
+
 return
 
 t_dayN= (1:length(W_kWh))/(24*6) -1 + 179; % 28.06.2011= day number 2*31+2*30+28+28
@@ -266,3 +316,5 @@ text(t_dayn(range(1)),4.2,sdate,"color","r");
 fname=sprintf("kwh_%03d_%03d", a, b);
 print( [fname '.pdf'], '-dpdf');
 print( [fname '.jpg'], '-djpeg');
+
+
