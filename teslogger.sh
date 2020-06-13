@@ -243,6 +243,7 @@ if echo "$action" | grep "extract" > /dev/null ; then
                             }
                             title=sprintf("%s %s", title, $1);   # collect left hand sides (keys)
                             data =sprintf("%s %s",  data, $2);   # collect right hand sides (values)
+                            #data =sprintf("%s %12.6f",  data, $2);   # collect right hand sides (values)
                             if($1) keycnt++;
                          }
                        }         
