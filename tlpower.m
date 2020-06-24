@@ -62,7 +62,7 @@ if isempty(fname)
   dname=regexprep(fname,'\.json','\.dat');  % remove this to trigger rebuild
   if 1  
     % old procedure: fetch bulky actual json file
-    cmd=sprintf('scp -p %s@%s:%s/aggregates.json %s ; rm %s', user, logsrv, tlpathsrv, fname, dname)
+    cmd=sprintf('scp -p %s@%s:%s/aggregates.json %s ; rm -f %s', user, logsrv, tlpathsrv, fname, dname)
     [status,output]=system( cmd )
   else
     % new procedure: differential fetch of dat file
@@ -281,11 +281,10 @@ tldat.name=fname;
 tldat.keys=keys;
 tldat.data=ee;
 
-
-movefile('agg*.gz', tlpath0);
-movefile('agg*.dat',tlpath1);
-movefile('agg*.pdf',tlpath9);
-
+% FIXME: filename patterns hard-coded. Avoid moving of aggregates.dat file
+try [status,msg,msgid]=movefile('aggregates_*.gz', tlpath0); catch; end
+try [status,msg,msgid]=movefile('aggregates_*.dat',tlpath1); catch; end
+try [status,msg,msgid]=movefile('aggregates_*.pdf',tlpath9); catch; end
 
 
 return
