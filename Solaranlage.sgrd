@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE KSysGuardWorkSheet>
+<WorkSheet rows="3" title="Solaranlage" interval="1" columns="1" locked="0">
+ <host name="Solaranlage" port="-1" command="/home/amerz/office/projects/solar/tesla_solaredge/log/solarmonitor.awk" shell=""/>
+ <display autoRange="1" vLines="1" showUnit="0" title="site_instant_power" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" svgBackground="" column="0" row="0" vDistance="60" stacked="0" manualRange="0" rowSpan="1" columnSpan="1">
+  <beam sensorName="site_instant_power" hostName="Solaranlage" sensorType="float" color="0xff716224"/>
+  <beam sensorName="battery_instant_power" hostName="Solaranlage" sensorType="float" color="0xffe20800"/>
+  <beam sensorName="load_instant_power" hostName="Solaranlage" sensorType="float" color="0xfff39906"/>
+  <beam sensorName="solar_instant_power" hostName="Solaranlage" sensorType="float" color="0xffd6ff07"/>
+ </display>
+ <display autoRange="1" vLines="1" showUnit="0" title="battery_charge" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" svgBackground="" column="0" row="1" vDistance="60" stacked="0" manualRange="0" rowSpan="1" columnSpan="1">
+  <beam sensorName="battery_charge" hostName="Solaranlage" sensorType="float" color="0xff0057ae"/>
+ </display>
+ <display autoRange="1" vLines="1" showUnit="0" title="load_frequency" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" min="49,5" svgBackground="" column="0" row="2" max="50,5" vDistance="60" stacked="0" manualRange="1" rowSpan="1" columnSpan="1">
+  <beam sensorName="load_frequency" hostName="Solaranlage" sensorType="float" color="0xff0057ae"/>
+  <beam sensorName="solar_frequency" hostName="Solaranlage" sensorType="float" color="0xffe20800"/>
+ </display>
+</WorkSheet>
