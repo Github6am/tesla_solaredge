@@ -11,7 +11,7 @@
  <display autoRange="1" vLines="1" showUnit="0" title="battery_charge" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" svgBackground="" column="0" row="1" vDistance="60" stacked="0" manualRange="0" rowSpan="1" columnSpan="1">
   <beam sensorName="battery_charge" hostName="Solaranlage" sensorType="float" color="0xff0057ae"/>
  </display>
- <display autoRange="1" vLines="1" showUnit="0" title="load_frequency" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" min="49,5" svgBackground="" column="0" row="2" max="50,5" vDistance="60" stacked="0" manualRange="1" rowSpan="1" columnSpan="1">
+ <display autoRange="0" vLines="1" showUnit="1" title="load_frequency" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" min="49.40" svgBackground="" column="0" row="2" max="50.40" vDistance="60" stacked="0" manualRange="1" rowSpan="1" columnSpan="1">
   <beam sensorName="load_frequency" hostName="Solaranlage" sensorType="float" color="0xff0057ae"/>
   <beam sensorName="solar_frequency" hostName="Solaranlage" sensorType="float" color="0xffe20800"/>
  </display>
