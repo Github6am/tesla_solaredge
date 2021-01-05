@@ -23,6 +23,7 @@
                           cmd1="wget -q --no-check-certificate -O - http://192.168.2.9/api/meters/aggregates" ;
                           cmd2="wget -q --no-check-certificate -O - http://192.168.2.9/api/system_status/soe" ;
                           cmdT="date '+%s.%N'";
+                          cmdE="ssh rapk head -n 1 /home/amerz/office/projects/solar/tesla_solaredge/log/aggregates.json" ;
 			  keyglo="site battery load solar";
 			  keysub="last_communication_time instant_power energy_exported energy_imported frequency"
 			  vtype="integer float float float float"
@@ -38,6 +39,8 @@
 			    }
 			  cmdT | getline t_old;
 			  close(cmdT);
+			  #cmdE | getline resp0;  # get the first message of today for Energy calculations
+			  #close(cmdE);
 			  
 			  # logging / debugging
 			  dbg=0;
@@ -54,12 +57,17 @@
 			      printf("%-36s { print \"%s %s\\t0\\t0\\t%s\" }\n", "/" key "\\?/" ,glob_kg[k],glob_ks[s],glob_vu[s]);
 			    }
                         }
-/json$/	                { # test command
+/json1$/                { # test command
                           cmd1 | getline resp1 ; 
                           close(cmd1);
                           printf("%s\n", resp1); fflush(); 
 			}
-			 
+/json0$/	        { # test command to read via ssh from my solar logger
+                          # vielleicht dauert es zu lange, wenn es bei BEGIN ausgefuehrt wird?
+			  cmdE | getline resp0;  # get the first message of today for Energy calculations
+			  close(cmdE);
+                          printf("%s\n", resp0); fflush(); 
+			}
 			{
 			  cmdT | getline t_new;        # we use this, to limit the rate of new wget request
 			  close(cmdT);
