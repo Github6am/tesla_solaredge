@@ -1,7 +1,7 @@
 #!/usr/bin/awk -E
 # File: solarmonitor.awk
 #
-# Purpose: a ksysguardd to retrieve and report solar sensor data
+# Purpose: a ksysguardd to retrieve and report Tesla Powerwall gateway solar sensor data
 #
 # Usage Example:
 #   ksysguard # Neues Arbeitsblatt, Entfernten Rechner ueberwachen -> Name der Quelle, Befehl 
@@ -12,12 +12,14 @@
 #
 # Background:
 #   - Since ksysguard has a nice display of live performance data, 
-#     I wanted to use it to monitor my photovoltaic system
+#     I wanted to use it to monitor my photovoltaic system, see Solaranlage.sgrd
 #   - https://techbase.kde.org/Development/Tutorials/Sensors
 #   - TODO: time is not processed yet.
+#           server IP adresses/names are hard-coded in the BEGIN section yet
 #   - this is the kind of telegram we want to parse:
 #     {"site":{"last_communication_time":"2020-11-07T18:03:17.689290067+01:00","instant_power":1307.253238916397,"instant_reactive_power":774.6698570251465,"instant_apparent_power":1519.5474385621437,"frequency":49.99971389770508,"energy_exported":11629334.309208203,"energy_imported":3029011.8005970903,"instant_average_voltage":217.46618143717447,"instant_total_current":0,"i_a_current":0,"i_b_current":0,"i_c_current":0,"timeout":1500000000},"battery":{"last_communication_time":"2020-11-07T18:03:17.690092061+01:00","instant_power":0,"instant_reactive_power":0,"instant_apparent_power":0,"frequency":49.992000000000004,"energy_exported":3256440,"energy_imported":3889760,"instant_average_voltage":217.4,"instant_total_current":0,"i_a_current":0,"i_b_current":0,"i_c_current":0,"timeout":1500000000},"load":{"last_communication_time":"2020-11-07T18:03:17.689290067+01:00","instant_power":1320.3204550697542,"instant_reactive_power":812.0530246793107,"instant_apparent_power":1550.0568437855495,"frequency":49.99971389770508,"energy_exported":0,"energy_imported":10389789.47222222,"instant_average_voltage":217.46618143717447,"instant_total_current":6.071382898913834,"i_a_current":0,"i_b_current":0,"i_c_current":0,"timeout":1500000000},"solar":{"last_communication_time":"2020-11-07T18:03:17.689608398+01:00","instant_power":12.455572962760925,"instant_reactive_power":35.099782943725586,"instant_apparent_power":37.244275540374126,"frequency":49.99971389770508,"energy_exported":19623486.929171618,"energy_imported":54.94833828607079,"instant_average_voltage":217.57920837402344,"instant_total_current":0,"i_a_current":0,"i_b_current":0,"i_c_current":0,"timeout":1500000000}}
-
+#
+# Author: A. Merz, 2020, GPLv3 or later, see http://www.gnu.org/licenses
 
  BEGIN		        { printf("ksysguardd 1.2.1\nksysguardd> "); fflush(); 
                           cmd1="wget -q --no-check-certificate -O - http://192.168.2.9/api/meters/aggregates" ;
@@ -165,7 +167,7 @@
 			  }
 			}
 			
-                        { # always output new promt and flush stdout
+                        { # always output new prompt and flush stdout
 			  printf("ksysguardd> ") ; fflush(); 
 			  if(dbg>1) print "#  " resp1 "\n"    >> logfile ;   # debug
 			  request = ""
