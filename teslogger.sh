@@ -42,7 +42,7 @@
 # $Header: teslogger.sh, v1.04, Andreas Merz, 2018, GPL $
 
 hc=cat                        # header filter: none               
-ip=192.168.2.7    # 1099752-01-B--T17J0003327  # my Tesla hostname
+ip=192.168.2.9    # 1099752-01-B--T17J0003327  # my Tesla hostname
 
 #--- default settings ---
 tsamp=5     # sampling interval in seconds, 0.1 < tsamp < 60
