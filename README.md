@@ -1,4 +1,4 @@
-# tesla_solaredge
+# tesla_solaredge - Powerwall2 logger
 
 This project is a collection of scripts and tools performing data
 logging and analyis of my solar roof PV system with battery storage.
