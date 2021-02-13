@@ -29,6 +29,15 @@ If you consider using this material, some IP adresses need to be patched.
 * The logger host name here is "rapk" or 192.168.2.6  
 * The json data is retrieved from adress 192.168.2.9  
 
+* update Feb 2021: unfortunately Tesla updated the Gateway Software
+  behind the scene to 20.49.0 on 2021-02-02. 
+  Since then, I have not yet found a way to regain https access 
+  to the sensor data. 
+  This is very annoying and should yield bad reputation for Tesla,
+  especially since they are stubbornly refusing to publish the API.
+  If anybody knows, how to acces the gateway again, I will be very glad to know.
+  
+
 
 ## Screenshots
 
