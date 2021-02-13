@@ -5,8 +5,8 @@
 #
 # Usage Example:
 #   ksysguard # Neues Arbeitsblatt, Entfernten Rechner ueberwachen -> Name der Quelle, Befehl 
-#   ls -ltr /home/amerz/.local/share/ksysguard  # new sgrd file occurs, if not saved
-#   vi /home/amerz/.config/ksysguardrc   # set active sheets and other stuff    
+#   ls -ltr ~/.local/share/ksysguard  # new sgrd file occurs, if not saved
+#   vi ~/.config/ksysguardrc          # set active sheets and other stuff    
 #
 #   echo monitors | ./solarmonitor.awk
 #
