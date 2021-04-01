@@ -33,16 +33,26 @@
 #   tlpower('aggregates_2018-06-17.json.gz');
 #
 # Background:
+#   - for each day, a gzipped file containing energy data is stored on the file system.
 #   - connect with browser to Tesla Powerwall 2 and watch IP traffic
 #     to learn how it works
 #   - see also: jshon   - tool for parsing JSON data on the command-line
 #   - GnuTLS problem with wget 1.13.4 on Raspbian. Worked with wget 1.16
 #   - try to work correctly with mawk and gawk
+#   - lots of thanks to Vince, https://github.com/vloschiavo/powerwall2.git
+#     his powerwallstats.sh script helped a lot after the annoying silent 
+#     Tesla update on 2021-02-02 18:26:32.
 
-# $Header: teslogger.sh, v1.04, Andreas Merz, 2018, GPL $
+# $Header: teslogger.sh, v1.2, Andreas Merz, 2018-2021 GPL3 $
 
 hc=cat                        # header filter: none               
 ip=192.168.2.9    # 1099752-01-B--T17J0003327  # my Tesla hostname
+
+# since powerwall2 v20.49.0 we need all this login stuff :-(
+cookie=/tmp/teslogger_cookie.txt
+username="customer"
+email="powerwall@mydomain"   # see powerwallstats.sh cited above
+passw="powerwall-password"
 
 #--- default settings ---
 tsamp=5     # sampling interval in seconds, 0.1 < tsamp < 60
@@ -53,9 +63,9 @@ action=log,stamp           # default action: start logging, add PC timestamp
 outformat="dat"            # output file format [dat | csv | "" ]
 pattern="date_time\|energy_"
 reject="busway_\|frequency_\|generator_"
-wgetopts="--no-check-certificate"
+wgetopts=""
+authopts="--no-check-certificate --keep-session-cookies"
 linerange='1,'             # sed adress, eg 1,100 or /13:15:50/,
-
 
 #--- process arguments ---
 cmdline="$0 $@"
@@ -99,6 +109,24 @@ for vv in $varlist ; do
 done                    
 echo                    | $hc
 
+
+# ------------ subroutine ------------------------
+
+# remove potentially outdated cookie file and get a new one from powerwall gateway
+new_cookie () {
+  # for now, we keep the last file for investigation purposes..
+  if [ -f $cookie ] ; then
+    mv $cookie $cookie.old
+  fi
+  if [ -f Basic ] ; then
+    mv Basic Basic.old   # this file will be downloaded again containing a new token
+  fi
+  wget $wgetopts $authopts --save-cookies $cookie \
+       --header="Content-Type: application/json" \
+       --post-data="{\"username\":\"$username\",\"password\":\"$passw\", \"email\":\"$email\",\"force_sm_off\":false}" "https://$ip/api/login/Basic"
+}
+
+
 #-------------------------------------------------
 # logger loop
 #-------------------------------------------------
@@ -106,6 +134,8 @@ if echo "$action" | grep "log" > /dev/null ; then
 
   Told=$(date +%F,%T.%N)
   $t mv $logfile.json ${logfile}_$Told.json   # save any unfinished data
+
+  new_cookie     # call subroutine
 
   while true ; do
 
@@ -124,7 +154,7 @@ if echo "$action" | grep "log" > /dev/null ; then
       echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
     fi
     #curl $url1 >> $logfile.json
-    $t wget $wgetopts -O - $url1   >> $logfile.json
+    $t wget $wgetopts $authopts --load-cookies $cookie -O - $url1   >> $logfile.json
     echo              >> $logfile.json
 
     # fetch new battery state every minute
@@ -133,15 +163,16 @@ if echo "$action" | grep "log" > /dev/null ; then
     #   echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
     # fi
       #curl $url1 >> $logfile.json
-      $t wget $wgetopts -O - $url2   >> $logfile.json
+      $t wget $wgetopts $authopts --load-cookies $cookie -O - $url2   >> $logfile.json
       echo              >> $logfile.json
     #fi
 
     # when a new day starts, save and compress data
     if [ "$dold" != "$dnew" ] ; then
       $t mv $logfile.json ${logfile}_$dold.json
-      $t gzip ${logfile}_$dold.json
+      $t gzip ${logfile}_$dold.json &
       $t ls -l ${logfile}_$dold.*
+      new_cookie
     fi
 
     Told=$Tnew
@@ -250,4 +281,5 @@ if echo "$action" | grep "extract" > /dev/null ; then
                        '
     fi
   done 
-fi  
+fi
+
