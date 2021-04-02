@@ -33,10 +33,11 @@
 #   tlpower('aggregates_2018-06-17.json.gz');
 #
 # Background:
+#   - since powerwall2 v20.49.0 we need all this login stuff; 
+#     the credentials are in teslogin.sh, which has to be edited and in your PATH
 #   - for each day, a gzipped file containing energy data is stored on the file system.
-#   - connect with browser to Tesla Powerwall 2 and watch IP traffic
+#   - connect with browser to Tesla Powerwall 2 and watch http traffic
 #     to learn how it works
-#   - see also: jshon   - tool for parsing JSON data on the command-line
 #   - GnuTLS problem with wget 1.13.4 on Raspbian. Worked with wget 1.16
 #   - try to work correctly with mawk and gawk
 #   - lots of thanks to Vince, https://github.com/vloschiavo/powerwall2.git
@@ -46,18 +47,14 @@
 # $Header: teslogger.sh, v1.2, Andreas Merz, 2018-2021 GPL3 $
 
 hc=cat                        # header filter: none               
-ip=192.168.2.9    # 1099752-01-B--T17J0003327  # my Tesla hostname
 
-# since powerwall2 v20.49.0 we need all this login stuff :-(
-cookie=/tmp/teslogger_cookie.txt
-username="customer"
-email="powerwall@mydomain"   # see powerwallstats.sh cited above
-passw="powerwall-password"
+# Put PID in the cookie file name to allow for multiple logger threads
+cookie=/tmp/teslogger_cookie$$.txt
 
 #--- default settings ---
 tsamp=5     # sampling interval in seconds, 0.1 < tsamp < 60
-url1=http://$ip/api/meters/aggregates   # Tesla adress of Metering info
-url2=http://$ip/api/system_status/soe   # Battery level in percent
+url1=api/meters/aggregates   # Tesla adress of Metering info
+url2=api/system_status/soe   # Battery level in percent
 logfile=aggregates
 action=log,stamp           # default action: start logging, add PC timestamp
 outformat="dat"            # output file format [dat | csv | "" ]
@@ -110,23 +107,6 @@ done
 echo                    | $hc
 
 
-# ------------ subroutine ------------------------
-
-# remove potentially outdated cookie file and get a new one from powerwall gateway
-new_cookie () {
-  # for now, we keep the last file for investigation purposes..
-  if [ -f $cookie ] ; then
-    mv $cookie $cookie.old
-  fi
-  if [ -f Basic ] ; then
-    mv Basic Basic.old   # this file will be downloaded again containing a new token
-  fi
-  wget $wgetopts $authopts --save-cookies $cookie \
-       --header="Content-Type: application/json" \
-       --post-data="{\"username\":\"$username\",\"password\":\"$passw\", \"email\":\"$email\",\"force_sm_off\":false}" "https://$ip/api/login/Basic"
-}
-
-
 #-------------------------------------------------
 # logger loop
 #-------------------------------------------------
@@ -135,7 +115,7 @@ if echo "$action" | grep "log" > /dev/null ; then
   Told=$(date +%F,%T.%N)
   $t mv $logfile.json ${logfile}_$Told.json   # save any unfinished data
 
-  new_cookie     # call subroutine
+  ip="$(teslogin.sh $cookie)"   # create session cookie and get powerwall2 IP address
 
   while true ; do
 
@@ -153,8 +133,7 @@ if echo "$action" | grep "log" > /dev/null ; then
     if echo $action | grep "stamp" > /dev/null ; then
       echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
     fi
-    #curl $url1 >> $logfile.json
-    $t wget $wgetopts $authopts --load-cookies $cookie -O - $url1   >> $logfile.json
+    $t wget $wgetopts $authopts --load-cookies $cookie -O - https://$ip/$url1   >> $logfile.json
     echo              >> $logfile.json
 
     # fetch new battery state every minute
@@ -162,8 +141,7 @@ if echo "$action" | grep "log" > /dev/null ; then
     # if echo $action | grep "stamp" > /dev/null ; then
     #   echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
     # fi
-      #curl $url1 >> $logfile.json
-      $t wget $wgetopts $authopts --load-cookies $cookie -O - $url2   >> $logfile.json
+      $t wget $wgetopts $authopts --load-cookies $cookie -O - https://$ip/$url2   >> $logfile.json
       echo              >> $logfile.json
     #fi
 
@@ -172,7 +150,7 @@ if echo "$action" | grep "log" > /dev/null ; then
       $t mv $logfile.json ${logfile}_$dold.json
       $t gzip ${logfile}_$dold.json &
       $t ls -l ${logfile}_$dold.*
-      new_cookie
+      teslogin.sh $cookie
     fi
 
     Told=$Tnew
@@ -184,7 +162,7 @@ fi
 # observer loop
 #-------------------------------------------------
 if echo "$action" | grep "watch" > /dev/null ; then
-  echo "not implemented yet"
+  echo "not implemented yet, use tail -f aggregates.json"
 fi  
 
 #-------------------------------------------------
