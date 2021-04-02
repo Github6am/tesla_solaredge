@@ -31,12 +31,12 @@ If you consider using this material, some IP adresses need to be patched.
 
 * update Feb 2021: unfortunately Tesla updated the Gateway Software
   behind the scene to 20.49.0 on 2021-02-02. 
-  Since then, I have not yet found a way to regain https access 
-  to the sensor data. 
+  As a consecquence https access to the sensor data did not work anymore.
   This is very annoying and should yield bad reputation for Tesla,
   especially since they are stubbornly refusing to publish the API.
-  If anybody knows, how to acces the gateway again, I will be very glad to know.
-  
+
+* update Mar 2021: Thanks to https://github.com/vloschiavo/powerwall2.git
+  access is possible using cookies.
 
 
 ## Screenshots

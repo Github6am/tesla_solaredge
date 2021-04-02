@@ -10,22 +10,36 @@
 #
 #   echo monitors | ./solarmonitor.awk
 #
+#   echo load_instant_power? | ./solarmonitor.awk
+#   echo load_instant_power  | ./solarmonitor.awk
+#
 # Background:
 #   - Since ksysguard has a nice display of live performance data, 
 #     I wanted to use it to monitor my photovoltaic system, see Solaranlage.sgrd
 #   - https://techbase.kde.org/Development/Tutorials/Sensors
 #   - TODO: time is not processed yet.
-#           server IP adresses/names are hard-coded in the BEGIN section yet
+#           tesla cookie will expire after 24h, not yet handled
+#   - server IP addresses/names and access credentials are moved to teslogin.sh - needs to be in PATH
 #   - this is the kind of telegram we want to parse:
 #     {"site":{"last_communication_time":"2020-11-07T18:03:17.689290067+01:00","instant_power":1307.253238916397,"instant_reactive_power":774.6698570251465,"instant_apparent_power":1519.5474385621437,"frequency":49.99971389770508,"energy_exported":11629334.309208203,"energy_imported":3029011.8005970903,"instant_average_voltage":217.46618143717447,"instant_total_current":0,"i_a_current":0,"i_b_current":0,"i_c_current":0,"timeout":1500000000},"battery":{"last_communication_time":"2020-11-07T18:03:17.690092061+01:00","instant_power":0,"instant_reactive_power":0,"instant_apparent_power":0,"frequency":49.992000000000004,"energy_exported":3256440,"energy_imported":3889760,"instant_average_voltage":217.4,"instant_total_current":0,"i_a_current":0,"i_b_current":0,"i_c_current":0,"timeout":1500000000},"load":{"last_communication_time":"2020-11-07T18:03:17.689290067+01:00","instant_power":1320.3204550697542,"instant_reactive_power":812.0530246793107,"instant_apparent_power":1550.0568437855495,"frequency":49.99971389770508,"energy_exported":0,"energy_imported":10389789.47222222,"instant_average_voltage":217.46618143717447,"instant_total_current":6.071382898913834,"i_a_current":0,"i_b_current":0,"i_c_current":0,"timeout":1500000000},"solar":{"last_communication_time":"2020-11-07T18:03:17.689608398+01:00","instant_power":12.455572962760925,"instant_reactive_power":35.099782943725586,"instant_apparent_power":37.244275540374126,"frequency":49.99971389770508,"energy_exported":19623486.929171618,"energy_imported":54.94833828607079,"instant_average_voltage":217.57920837402344,"instant_total_current":0,"i_a_current":0,"i_b_current":0,"i_c_current":0,"timeout":1500000000}}
 #
 # Author: A. Merz, 2020, GPLv3 or later, see http://www.gnu.org/licenses
 
- BEGIN		        { printf("ksysguardd 1.2.1\nksysguardd> "); fflush(); 
-                          cmd1="wget -q --no-check-certificate -O - http://192.168.2.9/api/meters/aggregates" ;
-                          cmd2="wget -q --no-check-certificate -O - http://192.168.2.9/api/system_status/soe" ;
-                          cmdT="date '+%s.%N'";
+ BEGIN		        { printf("ksysguardd 1.2.1\nksysguardd> "); fflush();
+			  
+			  cookiefile=sprintf("/tmp/solarmonitor_cookie%d.txt", PROCINFO["pid"]); # thread-safe cookie file name
+                          cmdB=sprintf("teslogin.sh %s", cookiefile);
+			  cmdB | getline ipaddress;    # set new cookie to access powerwall and get its ip address
+			  close(cmdB);
+			  
+			  # the powerwall query commands
+			  cmd1=sprintf("wget -q --no-check-certificate --keep-session-cookies --load-cookies %s -O - https://%s/api/meters/aggregates", cookiefile, ipaddress) ;
+                          cmd2=sprintf("wget -q --no-check-certificate --keep-session-cookies --load-cookies %s -O - https://%s/api/system_status/soe", cookiefile, ipaddress) ;
+                          
+			  cmdT="date '+%s.%N'";
                           cmdE="ssh rapk head -n 1 /home/amerz/office/projects/solar/tesla_solaredge/log/aggregates.json" ;
+			  
+			  # assemble key patterns which can be monitored
 			  keyglo="site battery load solar";
 			  keysub="last_communication_time instant_power energy_exported energy_imported frequency"
 			  vtype="integer float float float float"
@@ -60,6 +74,7 @@
 			    }
                         }
 /json1$/                { # test command
+                          # printf("%s\n", cmd1); fflush();
                           cmd1 | getline resp1 ; 
                           close(cmd1);
                           printf("%s\n", resp1); fflush(); 
