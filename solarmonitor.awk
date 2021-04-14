@@ -73,7 +73,7 @@
 			  #close(cmdE);
 			  
 			  # logging / debugging
-			  dbg=0;
+			  dbg=1;
 			  logfile="/tmp/solarmonitor.log"
 			  if(dbg>0) printf("%d: BEGIN\n", t_old) > logfile ;  # debug
 			  sensor_group=0;
@@ -100,7 +100,7 @@
 			    }
 			  printf("/sensor./L._v\\?/       { print \"Voltage\\t0\\t0\\tV\" }\n");
 			  printf("/sensor./L._p\\?/	  { print \"Power\\t0\\t0\\tW\" }\n");
-			  printf("/sensor./L._q\\?/	  { print \"Reactive Power\\t0\\t0\\tVar\" }\n");
+			  printf("/sensor./L._q\\?/	  { print \"Reactive Power\\t0\\t0\\tVAr\" }\n");
 			  printf("/sensor./L._eExp\\?/    { print \"Energy Exported\\t0\\t0\\tkWh\" }\n");
 			  printf("/sensor./L._eImp\\?/    { print \"Energy Imported\\t0\\t0\\tkWh\" }\n");
                         }
@@ -121,7 +121,7 @@
 			{
 			  cmdT | getline t_new;        # we use this, to limit the rate of new wget request
 			  close(cmdT);
-			  if(dbg>0) print "# " t_new " cmd: " $0    >> logfile ;   # debug
+			  if(dbg>1) print "# " t_new " cmd: " $0    >> logfile ;   # debug
 			}
 			 
 /^battery_charge\?/	              { print "Battery charging state\t0\t100\t%" } 
@@ -193,7 +193,7 @@
 			  
 			  if(sensor_group==1) {
 			    if( (dt1 = t_new - t_old1) >= 0.5 || resp1 == "" ) {	    # limit polling rate for group 1
-			      if(dbg>0) { print "  dt1: " dt1 >> logfile };
+			      if(dbg>1) { print "  dt1: " dt1 >> logfile };
 			      t_old1=t_new;
 			      cmd1 | getline resp1 ;	# get https resp1
                               close(cmd1);
@@ -202,7 +202,7 @@
 
 			  if(sensor_group==2) {
 			    if( (dt2 =  t_new - t_old2) >= 0.5 || resp2 == "" ) {	     # limit polling rate for group 2
-			      if(dbg>0) { print "  dt2: " dt2 >> logfile };
+			      if(dbg>1) { print "  dt2: " dt2 >> logfile };
 			      t_old2=t_new;
 			      cmd2 | getline resp2 ;	# get https resp2
                               close(cmd2);
@@ -211,7 +211,7 @@
 			    
 			  if(sensor_group==3) {
 			    if( (dt3 =  t_new - t_old3) >= 0.5 || resp3 == "" ) {	     # limit polling rate for group 2
-			      if(dbg>0) { print "  dt3: " dt3 >> logfile };
+			      if(dbg>1) { print "  dt3: " dt3 >> logfile };
 			      t_old3=t_new;
 			      for( retry =2; retry>0 ; retry--) {
 			  	cmd3 | getline tmp3 ;
@@ -219,8 +219,8 @@
 			        # bullshit: sporadic errors, when reading the sensors. Workaround:
 			        ierr=match(tmp3, "error\":\"[^\"]");   # break, if error: is empty
 			        if( ierr == 0) break;			     
-			        if(dbg>0) print "  retry " ierr " ERRNO: " ERRNO >> logfile  
-			        if(dbg>1) print tmp3   >> logfile
+			        if(dbg>1) print "  retry " ierr " ERRNO: " ERRNO >> logfile  
+			        if(dbg>2) print tmp3   >> logfile
 			      }
 			      if(retry>0) resp3=tmp3;	      # use the new response
 			    }
@@ -300,8 +300,8 @@
 			      close(cmdT);		 # debug - measure overall respons time
                               printf("# %20.9f  re: %-21s = %-20s \tt_response = %8.3f ms\n", t_res, request, result, (t_res-t_new)*1000) >> logfile ; 
 			    }
-			  if(dbg>1) print "#  " resp1 "\n"    >> logfile ;   # debug
-			  if(dbg>1) print "#  " resp3 "\n"    >> logfile ;   # debug
+			  if(dbg>2) print "#  " resp1 "\n"    >> logfile ;   # debug
+			  if(dbg>2) print "#  " resp3 "\n"    >> logfile ;   # debug
 			  request = ""
 			  result = ""
 		          sensor_group=0;
