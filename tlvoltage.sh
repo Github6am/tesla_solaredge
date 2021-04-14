@@ -40,6 +40,7 @@ cat $solog | awk '
                      }
 ' > v.dat
 
-tag=$(head -n 1 v.dat | tr -d '#:-' | awk '{ print $1 "_" $2}')
-cp -p v.dat $tag.v.dat
-
+#tag=$(head -n 1 v.dat | tr -d '#:-' | awk '{ print $1 "_" $2}')
+tag=$(head -n 1 v.dat | tr -d '#:-' | awk '{ print $1}')
+cp -p v.dat ${tag}_v.dat
+cp -p $solog ${tag}_solarmonitor.log
