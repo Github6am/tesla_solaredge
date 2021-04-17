@@ -75,7 +75,7 @@
 			  # logging / debugging
 			  dbg=1;
 			  logfile="/tmp/solarmonitor.log"
-			  if(dbg>0) printf("%d: BEGIN\n", t_old) > logfile ;  # debug
+			  if(dbg>0) printf("%d: BEGIN\n", t_old) >> logfile ;  # debug
 			  sensor_group=0;
 			}
 			
