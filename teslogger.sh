@@ -27,6 +27,7 @@
 #   teslogger.sh -e teslog_2018*.json.gz  > e.dat
 #   teslogger.sh -e pattern='"date_time\|instant_power"' aggregates_2018*.json.gz > p.dat
 #   teslogger.sh -e pattern='"date_time\|instant_power"' linerange=/07:15:00/,/07:16:00/ aggregates_2018-10*.json.gz > p.dat
+#   teslogger.sh -e pattern='"date_time\|_v_V"' aggregates.json
 #
 #   # gnu octave graph
 #   load 'p.dat' ; figure, plot(p(:,7:10));
@@ -44,7 +45,7 @@
 #     his powerwallstats.sh script helped a lot after the annoying silent 
 #     Tesla update on 2021-02-02 18:26:32.
 
-# $Header: teslogger.sh, v1.2, Andreas Merz, 2018-2021 GPL3 $
+# $Header: teslogger.sh, v1.3, Andreas Merz, 2018-2021 GPL3 $
 
 hc=cat                        # header filter: none               
 
