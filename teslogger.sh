@@ -27,6 +27,7 @@
 #   teslogger.sh -e teslog_2018*.json.gz  > e.dat
 #   teslogger.sh -e pattern='"date_time\|instant_power"' aggregates_2018*.json.gz > p.dat
 #   teslogger.sh -e pattern='"date_time\|instant_power"' linerange=/07:15:00/,/07:16:00/ aggregates_2018-10*.json.gz > p.dat
+#   teslogger.sh -e pattern='"date_time\|_v_V"' aggregates.json
 #
 #   # gnu octave graph
 #   load 'p.dat' ; figure, plot(p(:,7:10));
@@ -44,7 +45,7 @@
 #     his powerwallstats.sh script helped a lot after the annoying silent 
 #     Tesla update on 2021-02-02 18:26:32.
 
-# $Header: teslogger.sh, v1.2, Andreas Merz, 2018-2021 GPL3 $
+# $Header: teslogger.sh, v1.3, Andreas Merz, 2018-2021 GPL3 $
 
 hc=cat                        # header filter: none               
 
@@ -55,6 +56,7 @@ cookie=/tmp/teslogger_cookie$$.txt
 tsamp=5     # sampling interval in seconds, 0.1 < tsamp < 60
 url1=api/meters/aggregates   # Tesla adress of Metering info
 url2=api/system_status/soe   # Battery level in percent
+url3=api/meters/readings     # Neurio sensors data
 logfile=aggregates
 action=log,stamp           # default action: start logging, add PC timestamp
 outformat="dat"            # output file format [dat | csv | "" ]
@@ -144,6 +146,10 @@ if echo "$action" | grep "log" > /dev/null ; then
       $t wget $wgetopts $authopts --load-cookies $cookie -O - https://$ip/$url2   >> $logfile.json
       echo              >> $logfile.json
     #fi
+
+    # fetch new voltages and reactive power data
+    $t wget $wgetopts $authopts --load-cookies $cookie -O - https://$ip/$url3	>> $logfile.json
+    echo	      >> $logfile.json
 
     # when a new day starts, save and compress data
     if [ "$dold" != "$dnew" ] ; then

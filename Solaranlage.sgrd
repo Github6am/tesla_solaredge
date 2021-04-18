@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE KSysGuardWorkSheet>
-<WorkSheet rows="3" title="Solaranlage" interval="1" columns="1" locked="0">
- <host name="Solaranlage" port="-1" command="/home/amerz/office/projects/solar/tesla_solaredge/log/solarmonitor.awk" shell=""/>
- <display autoRange="1" vLines="1" showUnit="0" title="site_instant_power" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" svgBackground="" column="0" row="0" vDistance="60" stacked="0" manualRange="0" rowSpan="1" columnSpan="1">
-  <beam sensorName="site_instant_power" hostName="Solaranlage" sensorType="float" color="0xff716224"/>
-  <beam sensorName="battery_instant_power" hostName="Solaranlage" sensorType="float" color="0xffe20800"/>
-  <beam sensorName="load_instant_power" hostName="Solaranlage" sensorType="float" color="0xfff39906"/>
-  <beam sensorName="solar_instant_power" hostName="Solaranlage" sensorType="float" color="0xffd6ff07"/>
+<WorkSheet locked="0" interval="2" rows="3" title="Solaranlage" columns="1">
+ <host port="-1" shell="" name="Solaranlage" command="/home/amerz/office/projects/solar/tesla_solaredge/log/solarmonitor.awk"/>
+ <display column="0" manualRange="0" vScroll="0" showUnit="0" rowSpan="1" class="FancyPlotter" hScale="1" title="site_instant_power" unit="" columnSpan="1" row="0" fontSize="8" svgBackground="" hLines="1" autoRange="1" vLines="1" labels="1" vDistance="60" version="1" stacked="0">
+  <beam color="0xff716224" hostName="Solaranlage" sensorType="float" sensorName="site_instant_power"/>
+  <beam color="0xffe20800" hostName="Solaranlage" sensorType="float" sensorName="battery_instant_power"/>
+  <beam color="0xfff39906" hostName="Solaranlage" sensorType="float" sensorName="load_instant_power"/>
+  <beam color="0xffd6ff07" hostName="Solaranlage" sensorType="float" sensorName="solar_instant_power"/>
  </display>
- <display autoRange="1" vLines="1" showUnit="0" title="battery_charge" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" svgBackground="" column="0" row="1" vDistance="60" stacked="0" manualRange="0" rowSpan="1" columnSpan="1">
-  <beam sensorName="battery_charge" hostName="Solaranlage" sensorType="float" color="0xff0057ae"/>
+ <display column="0" manualRange="0" vScroll="0" showUnit="0" rowSpan="1" class="FancyPlotter" hScale="1" title="battery_charge" unit="" columnSpan="1" row="1" fontSize="8" svgBackground="" hLines="1" autoRange="1" vLines="1" labels="1" vDistance="60" version="1" stacked="0">
+  <beam color="0xff0057ae" hostName="Solaranlage" sensorType="float" sensorName="battery_charge"/>
  </display>
- <display autoRange="0" vLines="1" showUnit="1" title="load_frequency" vScroll="0" class="FancyPlotter" hLines="1" version="1" labels="1" fontSize="8" unit="" hScale="1" min="49.40" svgBackground="" column="0" row="2" max="50.40" vDistance="60" stacked="0" manualRange="1" rowSpan="1" columnSpan="1">
-  <beam sensorName="load_frequency" hostName="Solaranlage" sensorType="float" color="0xff0057ae"/>
-  <beam sensorName="solar_frequency" hostName="Solaranlage" sensorType="float" color="0xffe20800"/>
+ <display column="0" manualRange="1" vScroll="0" max="235" showUnit="0" rowSpan="1" class="FancyPlotter" hScale="1" title="L1_v" unit="" columnSpan="1" row="2" fontSize="8" svgBackground="" hLines="1" autoRange="1" vLines="0" vDistance="30" labels="1" version="1" stacked="0" min="220">
+  <beam color="0xffb1a000" hostName="Solaranlage" sensorType="float" sensorName="sensor1/L1_v"/>
+  <beam color="0xff202020" hostName="Solaranlage" sensorType="float" sensorName="sensor1/L2_v"/>
+  <beam color="0xff909090" hostName="Solaranlage" sensorType="float" sensorName="sensor1/L3_v"/>
+  <beam color="0xffff0000" hostName="Solaranlage" sensorType="float" sensorName="sensor2/L1_v"/>
+  <beam color="0xff00a900" hostName="Solaranlage" sensorType="float" sensorName="sensor2/L2_v"/>
+  <beam color="0xff0028a9" hostName="Solaranlage" sensorType="float" sensorName="sensor2/L3_v"/>
  </display>
 </WorkSheet>
