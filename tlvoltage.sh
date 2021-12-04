@@ -11,7 +11,9 @@ if [ -f "$1" ] ; then
   solog=$1
 fi
 
-cat $solog | awk '
+if head -n 300 $solog | grep " re: " > /dev/null ; then
+  # process a dbg log file
+  cat $solog | awk '
   / re:/             { if(t0==0) { 
                          t0=$2;
 			 tstr=strftime("%F %T",t0);
@@ -38,9 +40,19 @@ cat $solog | awk '
 		         printf("\n");
 		       }
                      }
-' > v.dat
+  ' > v.dat
 
-#tag=$(head -n 1 v.dat | tr -d '#:-' | awk '{ print $1 "_" $2}')
-tag=$(head -n 1 v.dat | tr -d '#:-' | awk '{ print $1}')
-cp -p v.dat ${tag}_v.dat
-cp -p $solog ${tag}_solarmonitor.log
+  #tag=$(head -n 1 v.dat | tr -d '#:-' | awk '{ print $1 "_" $2}')
+  tag=$(head -n 1 v.dat | tr -d '#:-' | awk '{ print $1}')
+  cp -p v.dat ${tag}_v.dat
+  cp -p $solog ${tag}_solarmonitor.log
+
+else
+  for ii in $* ; do
+    jj=$(echo $ii | sed -e 's/json.*/dat/' | sed -e 's/aggregates/readings/')
+
+    echo "processing $ii --> $jj"
+    # process a json file
+    ./teslogger.sh -e pattern='"date_time\|v_V\|p_W\|q_VAR"' $ii > $jj
+  done
+fi

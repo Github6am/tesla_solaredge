@@ -12,10 +12,10 @@ mycolororder = [  0.9 0.6 0.6; 0.6 0.9 0.6; 0.6 0.6 0.9;  0.9 0.0 0.0; 0.0 0.9 0
 set(0, 'defaultAxesColorOrder', mycolororder);
 load v.dat
 
-% fix zero spike
-i0=find(v(1,:)==0.0);
+% fix zero spikes in L1_v - FIXME: maybe a bug with the read timing?
+i0=find(v(:,2)==0.0);
 if( ~isempty(i0))
-  v(1,i0)=v(2,i0);
+  v(i0,2)=v(i0+1,2);  % dirty: replace 0 with next neighbour values
 end
 
 % find start time of recording, unix-time to matlab-time
@@ -66,7 +66,7 @@ color='rgb';
 figure
 for i=1:3
   subplot(3,1,i);
-  colormap (summer ());
+  %colormap (summer ());
   hist(v(:,[i+1 ]), 1000, 'facecolor', color(i), 'edgecolor', color(i));  
   xlim([214 236]);
   grid on; set(gca, 'xminorgrid','on');
