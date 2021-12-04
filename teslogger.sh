@@ -36,6 +36,9 @@
 # Background:
 #   - since powerwall2 v20.49.0 we need all this login stuff; 
 #     the credentials are in teslogin.sh, which has to be edited and in your PATH
+#   - since powerwall2 v21.35.0 , 2021-10-01 the stuff does not run stable anymore. :-( F*CK Tesla
+#     It happens that the Gateway does not respond over the network anymore
+#     and needs a power-down reset - the dumb thing has no reset button...
 #   - for each day, a gzipped file containing energy data is stored on the file system.
 #   - connect with browser to Tesla Powerwall 2 and watch http traffic
 #     to learn how it works
@@ -45,7 +48,7 @@
 #     his powerwallstats.sh script helped a lot after the annoying silent 
 #     Tesla update on 2021-02-02 18:26:32.
 
-# $Header: teslogger.sh, v1.3, Andreas Merz, 2018-2021 GPL3 $
+# $Header: teslogger.sh, v1.4, Andreas Merz, 2018-2021 GPL3 $
 
 hc=cat                        # header filter: none               
 
@@ -54,6 +57,7 @@ cookie=/tmp/teslogger_cookie$$.txt
 
 #--- default settings ---
 tsamp=5     # sampling interval in seconds, 0.1 < tsamp < 60
+url0=api/system/update/status # current version info
 url1=api/meters/aggregates   # Tesla adress of Metering info
 url2=api/system_status/soe   # Battery level in percent
 url3=api/meters/readings     # Neurio sensors data
@@ -114,8 +118,10 @@ echo                    | $hc
 #-------------------------------------------------
 if echo "$action" | grep "log" > /dev/null ; then
 
-  Told=$(date +%F,%T.%N)
-  $t mv $logfile.json ${logfile}_$Told.json   # save any unfinished data
+  Told=$(date +%F,%T.%N#%s)
+  sold=$(echo $Told | sed -e 's/.*#//')       # old unix second
+  told=$(echo $Told | sed -e 's/#.*//')       # old time stamp
+  $t mv $logfile.json ${logfile}_$told.json   # save any unfinished data after restart
 
   ip="$(teslogin.sh $cookie)"   # create session cookie and get powerwall2 IP address
 
@@ -125,17 +131,22 @@ if echo "$action" | grep "log" > /dev/null ; then
     wait=$(date +%S.%N | sed -e 's/^0//' |
       awk -v tsamp=$tsamp '{ printf("%f", tsamp -0.007 - ($1 % tsamp))}')
     sleep $wait
-    Tnew=$(date +%F,%T.%N)
+    Tnew=$(date +%F,%T.%N#%s)
     dnew=$(echo $Tnew | sed -e 's/,.*//')    # extract new date
     dold=$(echo $Told | sed -e 's/,.*//')    # extract old date
+    snew=$(echo $Tnew | sed -e 's/.*#//')    # extract new unix second
+    hnew=$(echo $Tnew | sed -e 's/.*,\(..\):.*/\1/')    # extract new hour
+    hold=$(echo $Told | sed -e 's/.*,\(..\):.*/\1/')    # extract old hour
     #Mnew=$(echo $Tnew | sed -e 's/.*:\(..\):.*/\1/')    # extract new minute
     #Mold=$(echo $Told | sed -e 's/.*:\(..\):.*/\1/')    # extract old minute
 
+
     # fetch new energy state
     if echo $action | grep "stamp" > /dev/null ; then
-      echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
+      echo -n "$Tnew: " | sed -e 's/#.*:/:/' >> $logfile.json     # add PC timestamp
     fi
     $t wget $wgetopts $authopts --load-cookies $cookie -O - https://$ip/$url1   >> $logfile.json
+    error_status1=$?
     echo              >> $logfile.json
 
     # fetch new battery state every minute
@@ -144,12 +155,21 @@ if echo "$action" | grep "log" > /dev/null ; then
     #   echo -n "$Tnew: " >> $logfile.json     # add PC timestamp
     # fi
       $t wget $wgetopts $authopts --load-cookies $cookie -O - https://$ip/$url2   >> $logfile.json
+      error_status2=$?
       echo              >> $logfile.json
     #fi
 
     # fetch new voltages and reactive power data
     $t wget $wgetopts $authopts --load-cookies $cookie -O - https://$ip/$url3	>> $logfile.json
+    error_status3=$?
     echo	      >> $logfile.json
+
+    # when a new hour starts, get status info
+    if [ "$hold" != "$hnew" -o "$pollstatus" != "" ] ; then
+      $t wget $wgetopts $authopts --load-cookies $cookie -O - https://$ip/$url0	>> $logfile.json
+      error_status0=$?
+      echo	      >> $logfile.json
+    fi
 
     # when a new day starts, save and compress data
     if [ "$dold" != "$dnew" ] ; then
@@ -159,6 +179,36 @@ if echo "$action" | grep "log" > /dev/null ; then
       teslogin.sh $cookie
     fi
 
+    # error handling
+    error_status="$error_status1$error_status2$error_status3"
+    if [ "$error_status" == "000" ] ; then
+      sold=$(echo $Told | sed -e 's/.*#//')    # update unix second of last success
+      pollstatus=""
+    else
+      dt=$(( $snew - $sold))
+      echo "error_status=$error_status # at $Tnew  since $dt s"
+      pollstatus="active"    # try to log more info from frequent status telegrams
+      
+      case "$error_status" in
+	444)
+          echo "error: network connection seems to be broken"
+	  ;;
+
+	555)
+          echo "error: auth failed, trying to login and renew cookie" 
+          teslogin.sh $cookie 
+	  ;;
+	*)
+          echo "error: no handler for this type available yet, see also: man wget" 
+	  ;;
+      esac
+      if [ $dt > 30 ] ; then
+        echo "error state still remains - retrying after 2 min"
+        sleep 120
+      fi 
+    fi
+ 
+    # finally ... update time FIFO
     Told=$Tnew
   done
 
@@ -258,7 +308,7 @@ if echo "$action" | grep "extract" > /dev/null ; then
                             }
                             title=sprintf("%s %s", title, $1);   # collect left hand sides (keys)
                             data =sprintf("%s %s",  data, $2);   # collect right hand sides (values)
-                            #data =sprintf("%s %12.6f",  data, $2);   # collect right hand sides (values)
+                            #data =sprintf("%s %10.4f",  data, $2);   # collect right hand sides (values)
                             if($1) keycnt++;
                          }
                        }         
