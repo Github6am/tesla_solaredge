@@ -48,7 +48,7 @@
 #     his powerwallstats.sh script helped a lot after the annoying silent 
 #     Tesla update on 2021-02-02 18:26:32.
 
-# $Header: teslogger.sh, v1.4, Andreas Merz, 2018-2021 GPL3 $
+# $Header: teslogger.sh, v1.5, Andreas Merz, 2018-2021 GPL3 $
 
 hc=cat                        # header filter: none               
 
@@ -124,7 +124,8 @@ if echo "$action" | grep "log" > /dev/null ; then
   $t mv $logfile.json ${logfile}_$told.json   # save any unfinished data after restart
 
   ip="$(teslogin.sh $cookie)"   # create session cookie and get powerwall2 IP address
-
+  pollstatus="startup"          # poll gateway status after startup of this script
+  
   while true ; do
 
     # wait to the next multiple of tsamp seconds
@@ -183,7 +184,7 @@ if echo "$action" | grep "log" > /dev/null ; then
     error_status="$error_status1$error_status2$error_status3"
     if [ "$error_status" == "000" ] ; then
       sold=$(echo $Told | sed -e 's/.*#//')    # update unix second of last success
-      pollstatus=""
+      pollstatus=""                            # reset poll flag
     else
       dt=$(( $snew - $sold))
       echo "error_status=$error_status # at $Tnew  since $dt s"
@@ -194,15 +195,16 @@ if echo "$action" | grep "log" > /dev/null ; then
           echo "error: network connection seems to be broken"
 	  ;;
 
-	555)
+	555|666)
           echo "error: auth failed, trying to login and renew cookie" 
           teslogin.sh $cookie 
 	  ;;
+
 	*)
           echo "error: no handler for this type available yet, see also: man wget" 
 	  ;;
       esac
-      if [ $dt > 30 ] ; then
+      if [ $dt -gt 30 ] ; then
         echo "error state still remains - retrying after 2 min"
         sleep 120
       fi 
