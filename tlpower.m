@@ -34,6 +34,7 @@ if ~exist('fname','var')
 end
 fname0='';
 
+% create output directories dataN, if they do not exist 
 if ~exist(tlpath0,'dir')
   [status,msg,msgid]=mkdir(tlpath0);
   if status ~= 1
@@ -56,6 +57,7 @@ if ~exist(tlpath9,'dir')
   end
 end
 
+% set default names, if no argument was provided
 if isempty(fname)
   fname='teslog.json';
   fname='aggregates.json';
