@@ -39,6 +39,7 @@
 #   - since powerwall2 v21.35.0 , 2021-10-01 the stuff does not run stable anymore. :-( F*CK Tesla
 #     It happens that the Gateway does not respond over the network anymore
 #     and needs a power-down reset - the dumb thing has no reset button...
+#   - in v21.44 they introduced a last_phase_energy_communication_time field.
 #   - for each day, a gzipped file containing energy data is stored on the file system.
 #   - connect with browser to Tesla Powerwall 2 and watch http traffic
 #     to learn how it works
@@ -65,7 +66,7 @@ logfile=aggregates
 action=log,stamp           # default action: start logging, add PC timestamp
 outformat="dat"            # output file format [dat | csv | "" ]
 pattern="date_time\|energy_"
-reject="busway_\|frequency_\|generator_"
+reject="busway_\|frequency_\|generator_\|last_phase_"
 wgetopts=""
 authopts="--no-check-certificate --keep-session-cookies"
 linerange='1,'             # sed adress, eg 1,100 or /13:15:50/,
