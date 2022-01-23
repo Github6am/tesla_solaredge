@@ -252,8 +252,10 @@ if echo "$action" | grep "extract" > /dev/null ; then
            /\{/  { ident++; }
            '
     else
-      # simple json parser
-      $t $cat $logf | sed -n "$sedrange" | tr ',' '\n' |  
+      # simple json parser. 
+      #   1. select lines, 2. reject lines without data, 3. break up to multiple lines, 
+      #   4. add curly braces, 5. awk pattern matching
+      $t $cat $logf | sed -n "$sedrange" | grep -v ": $\|^$" | tr ',' '\n' |  
          sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' |
          awk '          
                            { if(0) print $0; }   # debug
