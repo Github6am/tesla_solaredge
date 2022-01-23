@@ -10,6 +10,7 @@ Currently it consists of several more or less related main components:
 1. [teslogger.sh](teslogger.sh)  
    The logger runs 24/7 on a Raspberry Pi and collects json messages
    from the Tesla Powerwall Gateway via ethernet.
+   It can also do some conversion of the logged files, see option -h.
 
 2. [tlpower.m](tlpower.m)  
    The postprocessor runs on GNU Octave or Matlab and currently can 
@@ -31,9 +32,8 @@ If you consider using this material, some IP adresses need to be patched.
 
 * update Feb 2021: unfortunately Tesla updated the Gateway Software
   behind the scene to 20.49.0 on 2021-02-02. 
-  As a consecquence https access to the sensor data did not work anymore.
-  This is very annoying and should yield bad reputation for Tesla,
-  especially since they are stubbornly refusing to publish the API.
+  As a consequence https access to the sensor data did not work anymore.
+  This is very annoying, especially since Tesla does not publish the API.
 
 * update Mar 2021: Thanks to https://github.com/vloschiavo/powerwall2.git
   access is possible using cookies.
@@ -41,7 +41,7 @@ If you consider using this material, some IP adresses need to be patched.
 
 ## Screenshots
 
-This is a view of live solar data in the system monitor
+This is a view of live solar data in the Linux ksysguard system monitor
 
   ![](doc/ksysguard_screenshot.png)
 
