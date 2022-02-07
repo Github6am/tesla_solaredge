@@ -196,13 +196,14 @@ if echo "$action" | grep "log" > /dev/null ; then
           echo "error: network connection seems to be broken"
 	  ;;
 
-	555|666)
+	555|666|888)
           echo "error: auth failed, trying to login and renew cookie" 
           teslogin.sh $cookie 
 	  ;;
 
 	*)
           echo "error: no handler for this type available yet, see also: man wget" 
+          teslogin.sh $cookie 
 	  ;;
       esac
       if [ $dt -gt 30 ] ; then
