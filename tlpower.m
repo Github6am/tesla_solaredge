@@ -33,6 +33,7 @@ if ~exist('fname','var')
   fname='';
 end
 fname0='';
+tldat=[];
 
 % create output directories dataN, if they do not exist 
 if ~exist(tlpath0,'dir')
@@ -128,7 +129,12 @@ end
 
 
 % load solar collector log data
-ee=load(dname);
+try
+  ee=load(dname);
+catch
+  warning( sprintf("failed to load %s - skipped\n", dname));
+  return;
+end
 
 % extract time info
 tY=ee(:,1);	% Day
