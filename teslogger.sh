@@ -67,7 +67,7 @@ action=log,stamp           # default action: start logging, add PC timestamp
 outformat="dat"            # output file format [dat | csv | "" ]
 pattern="date_time\|energy_"
 reject="busway_\|frequency_\|generator_\|last_phase_"
-wgetopts=""
+wgetopts="--tries=1"       # experimental: avoid spurious powerwall hang on retry
 authopts="--no-check-certificate --keep-session-cookies"
 linerange='1,'             # sed adress, eg 1,100 or /13:15:50/,
 
