@@ -178,6 +178,16 @@ if echo "$action" | grep "log" > /dev/null ; then
       $t mv $logfile.json ${logfile}_$dold.json
       $t gzip ${logfile}_$dold.json &
       $t ls -l ${logfile}_$dold.*
+      
+      #  avoid disk overflow during error-free operation
+      if [ -f nohup.out ] ; then
+        if ! grep error nohup.out > err.out ; then
+	  echo "no previous err, truncated nohup.out  $dnew" > nohup.out
+	else
+	  echo "error occurred, keeping nohup.out"
+	fi
+      fi
+      
       teslogin.sh $cookie
     fi
 
