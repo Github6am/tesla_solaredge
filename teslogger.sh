@@ -48,8 +48,13 @@
 #   - lots of thanks to Vince, https://github.com/vloschiavo/powerwall2.git
 #     his powerwallstats.sh script helped a lot after the annoying silent 
 #     Tesla update on 2021-02-02 18:26:32.
+#   - The next annoying update on 2024-11-08 to 24.36.2 prohibited the use
+#     of the default password. 
+#     browsing to https://IPofPowerwall/password offers an option to
+#     reset a forgotten password after toggling the powerwall switch.
+#   - .. I would not recommend using Tesla products, due to their general policy.
 
-# $Header: teslogger.sh, v1.5, Andreas Merz, 2018-2021 GPL3 $
+# $Header: teslogger.sh, v1.6, Andreas Merz, 2018-2024 GPL3 $
 
 hc=cat                        # header filter: none               
 
