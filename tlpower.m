@@ -260,6 +260,49 @@ if 0
   print( [ gname '_freq.pdf'], '-dpdf', portrait);
 end
 
+%---------------------
+% plot L123 power
+%---------------------
+if 1
+  % colors as used in according ksysguard trace
+  rgbcolororder= [0.9 0.5 0.5; 0.5 0.9 0.5; 0.5 0.5 0.9; 0.8 0.8 0.0; 0.7 0.9 1.0; 0.0 0.1 0.8; 0.5 0.0 0.6; 0.4 0.4 0.4; 0.5 0.8 0.8 ; 0 0 0 ];
+
+  ipstart=24;                    % column, where power sensor values begin
+  ipower   = ipstart+(0:2:14);   % indices of p_W. p_W q_VAR are alternating in a row
+  iqvar    = ipower+1;
+  ipow=ipower(5:8);  % select only L1,L2,L3 powers of second sensor
+  keys={'L1','L2','L3','o','avgL3'};
+
+  %dd=remove_zero_readings(ee,ipstart);
+  [dd,ik]=remove_zero_readings(ee,ipstart+8);
+  tp=t(ik);      % adapt time vector
+  pp=dd(:,ipow); % select data to be plotted
+  
+  % looks like a PWM - try to plot a moving average in addition:
+  h=hamming(15);
+  pL3=filter(h,1,pp(:,3))/sum(h); % our traces are powers, not voltages.
+  
+  figure
+  set(0, 'defaultAxesColorOrder', rgbcolororder);
+  %pp(:,3)=50;  % hide this nasty Powerwall PWM trace
+  plot(tp, pp/1e3); grid on ; hold on
+  plot(tp, pL3/1e3); grid on  % add the averaged Tesla power 
+
+  %plot(days, pp/1e3); grid on
+  %datetick;
+  axis("tight"); ylim([-0.5 2]);
+  tt=title(sprintf('L123 Power %s', gname), 'Interpreter','none' );
+  xlabel('t / h'); ylabel('p / kW');
+  ll=legend(keys);  set(ll,'Interpreter','none');
+  %set(gca,'ColorOrder', rgbcolororder );  % tut ned..
+  tx1=text(0,  -0.08, sprintf('%s', date1), 'Units', 'normalized', 'FontSize', 8);
+  tx2=text(0.9,-0.08, sprintf('%s', date2), 'Units', 'normalized', 'FontSize', 8);
+
+  print( [ gname '_L123_power.pdf'], '-dpdf', portrait);
+  hold off
+  set(0, 'defaultAxesColorOrder', mycolororder);
+end
+
 %---------------------------------
 % plot battery charging level
 %---------------------------------

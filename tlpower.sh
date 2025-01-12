@@ -81,7 +81,9 @@ for ii in $args ; do
   echo "processing $ii --> $jj"
 
   # extract energy data and battery charging state
-  ./teslogger.sh -e pattern='"date_time\|instant_power\|energy_\|frequency\|percentage"' $ii > $jj
+  # ./teslogger.sh -e pattern='"date_time\|instant_power\|energy_\|frequency\|percentage"' $ii > $jj
+  # ... and L123 powers
+  ./teslogger.sh -e pattern='"date_time\|instant_power\|energy_\|frequency\|percentage\|_p_W\|_q_VAR"' $ii > $jj
 
   # extract battery charging state
   # pp=$(echo $ii | sed -e 's/json.*/percentage.dat/')
