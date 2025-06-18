@@ -49,12 +49,16 @@
 #     his powerwallstats.sh script helped a lot after the annoying silent 
 #     Tesla update on 2021-02-02 18:26:32.
 #   - The next annoying update on 2024-11-08 to 24.36.2 prohibited the use
-#     of the default password. 
-#     browsing to https://IPofPowerwall/password offers an option to
-#     reset a forgotten password after toggling the powerwall switch.
-#   - .. I would not recommend using Tesla products, due to their general policy.
+#     of the default password. Message: default password not supported.
+#     Browsing to https://IPofPowerwall/password offers an option to
+#     reset a blocked? or forgotten password after toggling the powerwall switch.
+#     The sequence which has finally worked on my powerwall2 was: 
+#     switch off - enter credentials - switch on - klick arrow.
+#   - After all my experiences, I would not recommend using Tesla products, 
+#     due to Teslas general policy, intransparency and missing interface documentation.
+#   - there is frequently missing or zero data, which we try to work around. Reason?
 
-# $Header: teslogger.sh, v1.6, Andreas Merz, 2018-2024 GPL3 $
+# $Header: teslogger.sh, v1.7, Andreas Merz, 2018-2025 GPL3 $
 
 hc=cat                        # header filter: none               
 
@@ -245,7 +249,7 @@ fi
 #-------------------------------------------------
 if echo "$action" | grep "extract" > /dev/null ; then
   sedrange="$(echo $linerange | sed 's/,$/,$/') p"
-  echo "#sedrange=$sedrange"
+  echo "# sedrange=\"$sedrange\""
 
   for logf in $logfiles ; do
     cat=cat
@@ -271,6 +275,17 @@ if echo "$action" | grep "extract" > /dev/null ; then
       # simple json parser. 
       #   1. select lines, 2. reject lines without data, 3. break up to multiple lines, 
       #   4. add curly braces, 5. awk pattern matching
+  
+      $cat $logf | awk '/null/{z++} END{ printf("# info: found %d / %d null lines\n", z, NR)}'
+      # the first three lines determine the data matrix size
+      # workaround sometimes missing data at beginning
+      sedrange="$(echo $linerange | sed 's/,$/,$/') p"
+      if $cat $logf | head -n 3 | grep null > /dev/null ; then
+        sedrange="$(echo $sedrange | sed 's/1,/2,/')"
+        echo "# warning: skipped corrupted first data set. sed $sedrange"
+        echo
+      fi
+
       $t $cat $logf | sed -n "$sedrange" | grep -v ": $\|^$" | tr ',' '\n' |  
          sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' |
          awk '          
