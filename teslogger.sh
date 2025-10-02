@@ -57,8 +57,11 @@
 #   - After all my experiences, I would not recommend using Tesla products, 
 #     due to Teslas general policy, intransparency and missing interface documentation.
 #   - there is frequently missing or zero data, which we try to work around. Reason?
+#   - if not all expected data items are present at the beginning, we may assume the 
+#     wrong keycnt and ignore a lot of data sets. 
+#     Then, it may help to delete the first incomplete data sets in the json input.
 
-# $Header: teslogger.sh, v1.7, Andreas Merz, 2018-2025 GPL3 $
+# $Header: teslogger.sh, v1.8, Andreas Merz, 2018-2025 GPL3 $
 
 hc=cat                        # header filter: none               
 
@@ -331,13 +334,15 @@ if echo "$action" | grep "extract" > /dev/null ; then
                             print $0;
                        }         
                        { if( format == "dat" ) {    # Matlab ascii data
-                            if(newline) {
+                            if(newline) {  if(0) print "# " $0 " # keycnt = " keycnt ;  
                               gsub("\"","",$2);
                               if(cnt++ == 1) {      # print title once, then never again
                                 print title ; 
                                 Nk=keycnt;          # remember number of keys
                               }
-                              if( Nk==keycnt) print data ;  # output data, if no item is missing
+                              if( Nk!=keycnt) 
+                                gsub("^  ","# ",data); # invalidate data, show as comment
+                              print data ;             # output data, if no item is missing
                               title="#"
                               data=""
                               keycnt=0;
