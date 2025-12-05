@@ -2,7 +2,7 @@
 #
 # teslogger.sh
 #
-# Purpose: 
+# Purpose:
 #   sample energy streams from Tesla Powerwall Gateway and log data to file
 #
 # Usage examples:
@@ -18,7 +18,7 @@
 #   nohup teslogger.sh tsamp=2 | gzip > nohup.out.gz &   # compress huge output
 #
 #   # export and understand the structure of the data
-#   teslogger.sh -e outformat="" pattern="" teslog_2018*.json.gz | head -n 200 
+#   teslogger.sh -e outformat="" pattern="" teslog_2018*.json.gz | head -n 200
 #   teslogger.sh action=extract,pretty-print linerange=1,2 outformat="" aggregates.json
 #
 #   # export data to matlab/octave array
@@ -48,10 +48,23 @@
 #   - lots of thanks to Vince, https://github.com/vloschiavo/powerwall2.git
 #     his powerwallstats.sh script helped a lot after the annoying silent 
 #     Tesla update on 2021-02-02 18:26:32.
+#   - The next annoying update on 2024-11-08 to 24.36.2 prohibited the use
+#     of the default password. Message: default password not supported.
+#     Browsing to https://IPofPowerwall/password offers an option to
+#     reset a blocked? or forgotten password after toggling the powerwall switch.
+#     The sequence which has finally worked on my powerwall2 was: 
+#     switch off - enter credentials - switch on - klick arrow.
+#   - After all my experiences, I would not recommend using Tesla products, 
+#     due to Teslas general policy, intransparency and missing interface documentation.
+#   - there is frequently missing or zero data, which we try to work around. Reason?
+#   - if not all expected data items are present at the beginning, we may assume the 
+#     wrong keycnt and ignore a lot of data sets. 
+#     Then, it may help to delete the first incomplete data sets in the json input.
+#   - debugging: insert tee tmp.x in the processing pipes or activate prints
 
-# $Header: teslogger.sh, v1.5, Andreas Merz, 2018-2021 GPL3 $
+# $Header: teslogger.sh, v1.8, Andreas Merz, 2018-2025 GPL3 $
 
-hc=cat                        # header filter: none               
+hc=cat                        # header filter: none
 
 # Put PID in the cookie file name to allow for multiple logger threads
 cookie=/tmp/teslogger_cookie$$.txt
@@ -91,11 +104,11 @@ while [ "$1" != "" ] ; do
   shift
 
   # compatibility to enumerated parameter interface  - no mixing, only appending of new will work!
-  case "$cnt" in 
-   0)  ;; 
+  case "$cnt" in
+   0)  ;;
    1)  logfile="$par" ; logfiles="$logfile" ;;
    *)  logfiles="$logfiles $par" ;;             # append all further arguments
-  esac 
+  esac
 done
 
 logfile=$logfile$t   # avoid overwriting of files in test case
@@ -110,7 +123,7 @@ echo                    | $hc
 echo "# settings:"      | $hc
 for vv in $varlist ; do
   echo "$vv=\"${!vv}\"" | $hc
-done                    
+done
 echo                    | $hc
 
 
@@ -126,7 +139,7 @@ if echo "$action" | grep "log" > /dev/null ; then
 
   ip="$(teslogin.sh $cookie)"   # create session cookie and get powerwall2 IP address
   pollstatus="startup"          # poll gateway status after startup of this script
-  
+
   while true ; do
 
     # wait to the next multiple of tsamp seconds
@@ -176,9 +189,9 @@ if echo "$action" | grep "log" > /dev/null ; then
     # when a new day starts, save and compress data
     if [ "$dold" != "$dnew" ] ; then
       $t mv $logfile.json ${logfile}_$dold.json
-      $t gzip ${logfile}_$dold.json &
+      $t nice gzip ${logfile}_$dold.json &
       $t ls -l ${logfile}_$dold.*
-      
+
       #  avoid disk overflow during error-free operation
       if [ -f nohup.out ] ; then
         if ! grep error nohup.out > err.out ; then
@@ -200,28 +213,28 @@ if echo "$action" | grep "log" > /dev/null ; then
       dt=$(( $snew - $sold))
       echo "error_status=$error_status # at $Tnew  since $dt s"
       pollstatus="active"    # try to log more info from frequent status telegrams
-      
+
       case "$error_status" in
 	444)
           echo "error: network connection seems to be broken"
 	  ;;
 
 	555|666|888)
-          echo "error: auth failed, trying to login and renew cookie" 
-          teslogin.sh $cookie 
+          echo "error: auth failed, trying to login and renew cookie"
+          teslogin.sh $cookie
 	  ;;
 
 	*)
           echo "error: no handler for this type available yet, see also: man wget" 
-          teslogin.sh $cookie 
+          teslogin.sh $cookie
 	  ;;
       esac
       if [ $dt -gt 30 ] ; then
         echo "error state still remains - retrying after 2 min"
         sleep 120
-      fi 
+      fi
     fi
- 
+
     # finally ... update time FIFO
     Told=$Tnew
   done
@@ -233,29 +246,29 @@ fi
 #-------------------------------------------------
 if echo "$action" | grep "watch" > /dev/null ; then
   echo "not implemented yet, use tail -f aggregates.json"
-fi  
+fi
 
 #-------------------------------------------------
 # extract data
 #-------------------------------------------------
 if echo "$action" | grep "extract" > /dev/null ; then
   sedrange="$(echo $linerange | sed 's/,$/,$/') p"
-  echo "#sedrange=$sedrange"
+  echo "# sedrange=\"$sedrange\""
 
   for logf in $logfiles ; do
     cat=cat
     if file $logf | grep "gzip compressed data" > /dev/null ; then
       cat=zcat
     fi
-    
+
     # test, if multi-line data set, date tag is considered as start
-    multline=$($cat $logf | sed -n '2,/^2[0-9][0-9][0-9]-/ p' | wc -l) 
+    multline=$($cat $logf | sed -n '2,/^2[0-9][0-9][0-9]-/ p' | wc -l)
     
     if echo "$action" | grep "pretty-print" > /dev/null ; then
       # simple json formatter
       $t $cat $logf | sed -n "$sedrange" | tr ',' '\n' |
          sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' |
-         awk '   
+         awk '
            /\}/  { ident--; }
                  { if(0) print $0;
                    if(1) {fmt=sprintf("%%%ds%%s\n",2*ident); printf(fmt,"",$0)};
@@ -263,22 +276,33 @@ if echo "$action" | grep "extract" > /dev/null ; then
            /\{/  { ident++; }
            '
     else
-      # simple json parser. 
+      # simple json parser.
       #   1. select lines, 2. reject lines without data, 3. break up to multiple lines, 
       #   4. add curly braces, 5. awk pattern matching
-      $t $cat $logf | sed -n "$sedrange" | grep -v ": $\|^$" | tr ',' '\n' |  
+
+      $cat $logf | awk '/null/{z++} END{ printf("# info: found %d / %d null lines\n", z, NR)}'
+      # the first three lines determine the data matrix size
+      # workaround sometimes missing data at beginning
+      sedrange="$(echo $linerange | sed 's/,$/,$/') p"
+      if $cat $logf | head -n 3 | grep null > /dev/null ; then
+        sedrange="$(echo $sedrange | sed 's/1,/2,/')"
+        echo "# warning: skipped corrupted first data set. sed $sedrange"
+        echo
+      fi
+
+      $t $cat $logf | sed -n "$sedrange" | grep -v ": $\|^$" | tr ',' '\n' |
          sed -e 's/{/\n{\n/g'     | sed -e 's/}/\n}\n/g' |
-         awk '          
+         awk '
                            { if(0) print $0; }   # debug
            /\{/            { ident++; }
            /\}/            { ident--; }
-           /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/ { 
+           /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/ {
                              pcdate=$1;
                              gsub("-"," ", pcdate);
                              k="";
                            }
            /^[0-9:\.]+: $/ { pctime=$1;
-                             gsub(":"," ", pctime); 
+                             gsub(":"," ", pctime);
                              date_time=sprintf("\"%s %s\"", pcdate, pctime);
                              if (ident<1)
                                print "\ndate_time = " date_time ;
@@ -290,46 +314,59 @@ if echo "$action" | grep "extract" > /dev/null ; then
                              val=t[2];
                              # last_communication_time special treatment:
                              if(t[5] != "") val=sprintf("%s:%s:%s:%s",t[2],t[3],t[4],t[5]);
-                             if (val == "") { 
+                             if (val == "") {
                                obj=key ;
                                k="";
                              }
-                             else { 
+                             else {
                                k=sprintf("%s_%s",obj,key);  # create a unique key
                                gsub("\"","",k);             # remove quotes
                                v[k]=val;
                              }
                              if(k != "") print k " = " v[k] ;
                            }
-           ' | grep -v "$reject" | grep "$pattern" |
+           /^null$/        { print $0;    # indicate missing data
+                           }
+           ' | grep -v "$reject" | grep "$pattern\|^null$" |
          awk -F "=" -v format=$outformat '
-                       { newline=0; if(0) print $0; 
+           /date_time/ { newdataset=1; complete++ ;
+                         gsub("\"","",$2);     # remove quotes
                        }
-           /date_time/ { newline++; 
-                       }
-                       { if( format == "" ) 
+                       { if( format == "" )
                             print $0;
-                       }         
-                       { if( format == "dat" ) {    # Matlab ascii data
-                            if(newline) {
-                              gsub("\"","",$2);
-                              if(cnt++ == 1) {      # print title once, then never again
-                                print title ; 
-                                Nk=keycnt;          # remember number of keys
+                       }
+           /^null$/    { # hack to avoid confusion by incomplete leading data rows
+                         complete-- ;
+                       }
+           !/null$/    { if( format == "dat" ) {    # Matlab ascii data
+                            if(complete) {
+                              if(newdataset) {  if(0) print "# " $0 " # keycnt = " keycnt ;
+                                # flush previous data set
+                                if(cnt++ == 1 ) {
+                                  # print title once, then never again
+                                  print title ;
+                                  complete++;
+                                  Nk=keycnt;             # remember number of keys
+                                }
+                                if( cnt>0) {
+                                  if( Nk!=keycnt)
+                                    gsub("^  ","# ",data); # invalidate data, show as comment
+                                  print data ;             # output data
+                                }
+                                title="#"
+                                data=""
+                                keycnt=0;
                               }
-                              if( Nk==keycnt) print data ;  # output data, if no item is missing
-                              title="#"
-                              data=""
-                              keycnt=0;
-                            }
-                            title=sprintf("%s %s", title, $1);   # collect left hand sides (keys)
-                            data =sprintf("%s %s",  data, $2);   # collect right hand sides (values)
-                            #data =sprintf("%s %10.4f",  data, $2);   # collect right hand sides (values)
-                            if($1) keycnt++;
+                              title=sprintf("%s %s", title, $1);   # collect left hand sides (keys)
+                              data =sprintf("%s %s",  data, $2);   # collect right hand sides (values)
+                              #data =sprintf("%s %10.4f",  data, $2);   # collect right hand sides (values)
+                              if($1) keycnt++;
+                           }
+                           newdataset=0;
                          }
-                       }         
+                       }
                        '
     fi
-  done 
+  done
 fi
 
