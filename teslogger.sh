@@ -189,7 +189,7 @@ if echo "$action" | grep "log" > /dev/null ; then
     # when a new day starts, save and compress data
     if [ "$dold" != "$dnew" ] ; then
       $t mv $logfile.json ${logfile}_$dold.json
-      $t gzip ${logfile}_$dold.json &
+      $t nice gzip ${logfile}_$dold.json &
       $t ls -l ${logfile}_$dold.*
 
       #  avoid disk overflow during error-free operation
